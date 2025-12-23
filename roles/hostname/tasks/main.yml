@@ -1,0 +1,16 @@
+---
+
+- name: Install requirements
+  ansible.builtin.package:
+    name: hostname
+    state: present
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ hostname }}"
+  notify:
+    - Reboot
+    - Gather facts
+  when:
+    - hostname is defined and hostname != ""
+    - ansible_connection not in [ "container", "docker", "community.docker.docker" ]

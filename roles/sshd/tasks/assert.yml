@@ -1,0 +1,8 @@
+---
+- name: Assert sshd_port is a valid port number
+  ansible.builtin.assert:
+    that:
+      - sshd_port is number
+      - sshd_port >= 1
+      - sshd_port <= 65535
+    fail_msg: "sshd_port must be an integer between 1 and 65535"

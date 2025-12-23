@@ -1,0 +1,9 @@
+---
+
+- name: Reboot
+  ansible.builtin.reboot:
+  when:
+    - hostname_reboot
+
+- name: Gather facts
+  ansible.builtin.setup:

@@ -1,0 +1,9 @@
+---
+- name: Install timezone information
+  ansible.builtin.package:
+    name: tzdata
+    state: present
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"

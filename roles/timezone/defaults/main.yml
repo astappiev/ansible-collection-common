@@ -1,0 +1,3 @@
+---
+# The timezone to set.
+timezone: Europe/Berlin  # noqa: var-naming[no-role-prefix]

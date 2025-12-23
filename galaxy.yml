@@ -1,0 +1,29 @@
+---
+namespace: astappiev
+name: common
+description: Essential Linux roles for most common tasks.
+version: 1.0.0
+
+readme: README.md
+
+authors:
+  - astappiev
+
+license:
+  - MIT
+
+tags:
+  - system
+  - security
+  - administration
+  - linux
+  - infrastructure
+
+dependencies:
+  community.general: ">=3.0.0"
+
+repository: https://github.com/astappiev/ansible-collection-common
+documentation: https://github.com/astappiev/ansible-collection-common
+issues: https://github.com/astappiev/ansible-collection-common/issues
+
+build_ignore: []

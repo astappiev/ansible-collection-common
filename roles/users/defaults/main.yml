@@ -1,0 +1,24 @@
+---
+
+# List of users to create
+# users_list:
+#   - name: exampleuser
+#     comment: "Example User"
+#     uid: 1001
+#     group: exampleuser
+#     groups: [sudo, www-data]
+#     shell: /bin/bash
+#     password: "$6$rounds=656000$..." # Use ansible-vault or generate with: mkpasswd --method=sha-512
+#     generate_ssh_key: true
+#     ssh_key_type: ed25519
+#     authorized_keys: |
+#         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKey1 user@host1
+#         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKey2 user@host2
+#     authorized_keys_exclusive: true
+#     sudo_options: "ALL=(ALL) NOPASSWD: ALL"
+#     password_validity_days: 90
+users_list:
+  - name: "{{ ansible_user }}"
+
+# The location to store ssh keys for user
+users_pubkeys_dir: "{{ inventory_dir }}/ssh_keys"

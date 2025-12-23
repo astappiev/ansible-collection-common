@@ -1,0 +1,2 @@
+# SSH port number to configure
+sshd_port: 22

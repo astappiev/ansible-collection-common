@@ -1,0 +1,104 @@
+---
+- name: user | Manage user {{ user.name }}
+  ansible.builtin.user:
+    name: "{{ user.name }}"
+    state: "{{ user.state | default('present') }}"
+    comment: "{{ user.comment | default(omit) }}"
+    create_home: "{{ user.create_home | default(true) }}"
+    password: "{{ user.password | default(omit) }}"
+    password_lock: "{{ user.password_lock | default(omit) }}"
+    uid: "{{ user.uid | default(omit) }}"
+    group: "{{ user.group | default(omit) }}"
+    groups: "{{ user.groups | default([]) | join(',') or omit }}"
+    home: "{{ user.home | default(omit) }}"
+    shell: "{{ user.shell | default('/bin/bash') }}"
+    update_password: "{{ user.update_password | default(omit) }}"
+    expires: "{{ user.expires | default(omit) }}"
+    system: "{{ user.system | default(omit) }}"
+    generate_ssh_key: "{{ user.generate_ssh_key | default(omit) }}"
+    ssh_key_passphrase: "{{ user.ssh_key_passphrase | default(omit) }}"
+    ssh_key_type: "{{ user.ssh_key_type | default('ed25519' if user.generate_ssh_key | default(false) else omit) }}"
+    ssh_key_comment: >-
+      {{ user.ssh_key_comment | default(user.name + '@' + common_hostname | default(ansible_facts["fqdn"]))
+      if user.generate_ssh_key | default(false) else omit }}
+  register: users_manage_user
+
+- name: user | Save generated ssh public key for {{ user.name }}
+  when:
+    - users_manage_user.ssh_public_key is defined
+    - users_manage_user.ssh_public_key is not none
+    - users_manage_user.ssh_public_key | length > 0
+  block:
+    - name: Create local directory for ssh-keys
+      ansible.builtin.file:
+        path: "{{ users_pubkeys_dir }}"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: user | Write public ssh key for {{ user.name }}
+      ansible.builtin.copy:
+        content: "{{ users_manage_user.ssh_public_key }}"
+        dest: "{{ users_pubkeys_dir }}/{{ inventory_hostname }}_{{ user.name }}.pub"
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+
+- name: user | Set sudo options for {{ user.name }}
+  ansible.builtin.template:
+    src: sudo.j2
+    dest: '/etc/sudoers.d/{{ user.name | replace(".", "dot") }}'
+    mode: "0640"
+    validate: /usr/sbin/visudo --check --file %s
+  when:
+    - user.sudo_options is defined
+  loop_control:
+    label: "{{ user.name }}"
+
+- name: user | Remove sudo options for {{ user.name }}
+  ansible.builtin.file:
+    path: '/etc/sudoers.d/{{ user.name | replace(".", "dot") }}'
+    state: absent
+  when:
+    - user.sudo_options is not defined
+  loop_control:
+    label: "{{ user.name }}"
+
+- name: user | Check users password valid time for {{ user.name }}
+  ansible.builtin.command:
+    cmd: 'awk ''BEGIN { FS = ":" } $1 == "{{ user.name }}" { print $5 }'' /etc/shadow'
+  register: users_pw_valid
+  changed_when: false
+  check_mode: false
+  when:
+    - user.state is defined and user.state != "absent" or
+      user.state is not defined
+
+- name: user | Set users password valid time for {{ user.name }}
+  ansible.builtin.command:
+    cmd: chage -M "{{ user.password_validity_days }}" "{{ user.name }}"
+  when:
+    - user.password_validity_days is defined
+    - users_pw_valid.stdout is defined
+    - users_pw_valid.stdout | int !=  user.password_validity_days | int
+  changed_when: true
+
+- name: user | Deploy authorized keys for {{ user.name }}
+  ansible.posix.authorized_key:
+    user: "{{ user.name }}"
+    key: "{{ user.authorized_keys }}"
+    state: present
+    exclusive: "{{ user.authorized_keys_exclusive | default(false) }}"
+  when:
+    - user.authorized_keys is defined
+
+
+# Other tasks per user
+
+- name: user | Include profile tasks for {{ user.name }}
+  ansible.builtin.include_tasks: user_profile.yml
+  vars:
+    ansible_become: true
+    ansible_become_user: "{{ user.name }}"

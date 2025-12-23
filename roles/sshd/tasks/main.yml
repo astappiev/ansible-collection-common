@@ -1,0 +1,10 @@
+---
+- name: Include assertions
+  ansible.builtin.include_tasks: assert.yml
+
+- name: Configure SSH port
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?Port '
+    line: 'Port {{ sshd_port }}'
+  notify: Restart sshd

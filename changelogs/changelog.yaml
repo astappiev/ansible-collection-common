@@ -1,0 +1,15 @@
+---
+ancestor: null
+releases:
+  1.0.0:
+    release_date: '2025-12-23'
+    changes:
+      release_summary: Initial release with common system administration roles.
+      major_changes:
+        - Initial release of the astappiev.common collection
+      minor_changes:
+        - Added admintools role for installing common system administration tools
+        - Added hostname role for configuring system hostname
+        - Added sshd role for configuring SSH daemon with security best practices
+        - Added timezone role for configuring system timezone
+        - Added users role for managing system users and groups
