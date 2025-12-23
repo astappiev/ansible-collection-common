@@ -1,0 +1,15 @@
+---
+mariadb_unix_socket: /var/run/mysqld/mysqld.sock
+
+mariadb_databases: []
+#   - name: db1
+#     collation: utf8_general_ci
+#     encoding: utf8
+#     replicate: true|false
+
+mariadb_users: []
+#   - name: user
+#     host: 100.64.200.10
+#     password: password
+#     priv: "*.*:USAGE/db1.*:ALL"
+#     state: present|absent

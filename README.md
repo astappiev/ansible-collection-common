@@ -2,6 +2,8 @@
 
 Essential Linux system administration roles.
 
+Only tested on Debian-based systems. Might work on others.
+
 ## Roles
 
 - `admintools` - Install common system administration tools

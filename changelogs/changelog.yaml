@@ -1,6 +1,16 @@
 ---
 ancestor: null
 releases:
+  1.1.0:
+    release_date: '2025-12-23'
+    changes:
+      release_summary: Added backup management and database roles.
+      minor_changes:
+        - Added restic role for automated backup management with restic and autorestic
+        - Added mariadb role for MariaDB server installation and database management
+        - Added redis role for Redis server installation
+        - Added buildtools role for installing development tools
+        - Added install_github_release module for downloading and installing binaries from GitHub releases
   1.0.0:
     release_date: '2025-12-23'
     changes:

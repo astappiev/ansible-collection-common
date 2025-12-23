@@ -1,0 +1,4 @@
+- name: Install buildtools
+  ansible.builtin.package:
+    name: "{{ buildtools_packages }}"
+    state: present

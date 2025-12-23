@@ -1,0 +1,65 @@
+---
+
+# The state of restic package. Use 'present' to install once, or 'latest' to keep updated.
+restic_state: latest
+
+# The path where restic binary will be installed.
+restic_binary_path: /usr/local/bin/restic
+
+# The state of autorestic package. Use 'present' to install once, or 'latest' to keep updated.
+autorestic_state: latest  # noqa: var-naming[no-role-prefix]
+
+# The path where autorestic binary will be installed.
+autorestic_binary_path: /usr/local/bin/autorestic  # noqa: var-naming[no-role-prefix]
+
+# The path where the autorestic configuration file will be created.
+autorestic_config_path: /root/.autorestic.yml  # noqa: var-naming[no-role-prefix]
+
+# Whether to add autorestic to cron for scheduled backups.
+autorestic_cron: true  # noqa: var-naming[no-role-prefix]
+
+# Define locations to backup.
+# https://autorestic.vercel.app/location
+# Example:
+# autorestic_locations:
+#   home:
+#     from: /home/user
+#     to: remote
+#   important:
+#     from: /path/to/important/stuff
+#     to:
+#       - remote
+#       - hdd
+#     options:
+#       forget:
+#         keep-daily: 7
+#         keep-weekly: 4
+#     hooks:
+#       prevalidate:
+#         - echo "Checks"
+#       before:
+#         - echo "One"
+#         - echo "Two"
+#         - echo "Three"
+#       after:
+#         - echo "Bye"
+#       failure:
+#         - echo "Something went wrong"
+#       success:
+#         - echo "Well done!"
+autorestic_locations: {}  # noqa: var-naming[no-role-prefix]
+
+# Define backup backends.
+# https://autorestic.vercel.app/backend
+# Example:
+# autorestic_backends:
+#   remote:
+#     type: b2
+#     path: 'myBucket:backup/home'
+#     env:
+#       B2_ACCOUNT_ID: account_id
+#       B2_ACCOUNT_KEY: account_key
+#   hdd:
+#     type: local
+#     path: /mnt/my_external_storage
+autorestic_backends: {}  # noqa: var-naming[no-role-prefix]

@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+---
+version: 2
+
+locations:
+    {{ autorestic_locations | to_nice_yaml(indent=2) | indent(4) }}
+
+backends:
+    {{ autorestic_backends | to_nice_yaml(indent=2) | indent(4) }}

@@ -1,0 +1,41 @@
+---
+- name: Install restic binary
+  astappiev.common.install_github_release:
+    repo: restic/restic
+    state: "{{ restic_state }}"
+    asset_regex: restic_.*\.bz2
+    version_command: "{{ restic_binary_path }} version"
+    move_rules:
+      - src_regex: restic_.*
+        dst: "{{ restic_binary_path }}"
+        mode: '0755'
+
+- name: Install autorestic binary
+  astappiev.common.install_github_release:
+    repo: cupcakearmy/autorestic
+    state: "{{ autorestic_state }}"
+    asset_regex: autorestic_.*\.bz2
+    version_command: "{{ autorestic_binary_path }} --version"
+    move_rules:
+      - src_regex: autorestic_.*
+        dst: "{{ autorestic_binary_path }}"
+        mode: '0755'
+
+- name: Create autorestic configuration
+  ansible.builtin.template:
+    src: autorestic.yml.j2
+    dest: "{{ autorestic_config_path }}"
+    mode: '0600'
+    owner: root
+    group: root
+    validate: "{{ autorestic_binary_path }} check -c %s"
+  when: autorestic_locations | length > 0 or autorestic_backends | length > 0
+
+- name: Add autorestic systemd timer
+  ansible.builtin.include_role:
+    name: systemd-timer
+  vars:
+    systemd_timer_name: "autorestic"
+    systemd_timer_command: "{{ autorestic_binary_path }} --restic-bin {{ restic_binary_path }} -c {{ autorestic_config_path }} --ci cron"
+    systemd_timer_on_calendar: "*:0/30"  # every 30 minutes
+  when: autorestic_cron | bool

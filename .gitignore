@@ -1,0 +1,11 @@
+# IDE
+.vscode/
+.idea/
+.ansible/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+*~
+__pycache__/

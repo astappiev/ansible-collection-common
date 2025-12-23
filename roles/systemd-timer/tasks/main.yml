@@ -1,0 +1,29 @@
+---
+- name: Uploading service file
+  ansible.builtin.template:
+    src: service.j2
+    dest: "{{ systemd_base_path }}/{{ systemd_timer_name }}.service"
+    owner: "{{ systemd_timer_user }}"
+    group: "{{ systemd_timer_group }}"
+    mode: '0644'
+  notify: Reload systemd
+  become: true
+
+- name: Uploading timer file
+  ansible.builtin.template:
+    src: timer.j2
+    dest: "{{ systemd_base_path }}/{{ systemd_timer_name }}.timer"
+    owner: "{{ systemd_timer_user }}"
+    group: "{{ systemd_timer_group }}"
+    mode: '0644'
+  notify: Reload systemd
+  become: true
+
+- name: Enabling timers
+  ansible.builtin.systemd:
+    name: "{{ systemd_timer_name }}.timer"
+    state: started
+    enabled: true
+    masked: false
+    scope: "{{ systemd_scope }}"
+  become: true

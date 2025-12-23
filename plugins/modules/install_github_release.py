@@ -1,0 +1,524 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+import re
+import urllib.request
+from ansible.module_utils.basic import AnsibleModule
+import json
+import tempfile
+import shutil
+import os
+from typing import Union, List
+import bz2
+import gzip
+import lzma
+import platform
+import filecmp
+from collections import defaultdict
+
+
+DOCUMENTATION = r"""
+module: install_github_release
+short_description: Download and install assets from Github releases page.
+description:
+  - This module can be used to select a release from a Github repository,
+    select an asset from that release based on OS and CPU architecture,
+    download the asset, and install files/directories from the asset.
+author:
+  - Mohammad Javad Naderi (https://github.com/QueraTeam/ansible-github)
+  - Oleh Astappiev
+options:
+  repo:
+    description:
+      - The name of the repository in the format `user_or_org/repo_name`.
+    required: true
+    type: str
+
+  tag:
+    description:
+      - The tag to select from releases page.
+        The default (`latest`) means the most recent non-prerelease, non-draft release.
+    default: latest
+    type: str
+
+  state:
+    description:
+      - The expected state of the package.
+        The default (`present`) means the package will not be updated automatically. If you need to update it, set to `latest`.
+    default: present
+    type: str
+
+  asset_regex:
+    description:
+      - A regex for selecting an asset (file name) from all the assets of selected release.
+        If there are multiple assets for different OSes and CPU architectures, you don't need
+        to specify OS (darwin, linux, ...) and architecture (x86_64, amd64, aarch64, arm64, ...)
+        in your regex (just write `.*` in place of them). This module tries to narrow down
+        assets based on the system's OS and CPU architecture.
+    required: true
+    type: str
+
+  asset_archive_format:
+    description:
+      - If the asset is an archive, you can specify the archive format for unpacking.
+        The format should be one of the formats supported by Python's `shutil.unpack_archive()`
+        function: `zip`, `tar`, `gztar`, `bztar`, or `xztar`.
+        If not provided, the module will use the filename extension to guess the format.
+    required: false
+    type: str
+
+  asset_arch_mapping:
+    description:
+      - If the repo uses non-standard strings to specify CPU architecture, you can define a custom
+        mapping between those and standard architectures. For example, if some repo uses `64` instead
+        of `x86_64` or `amd64`, you can set this option to `amd64: "64"` or `x86_64: "64"`.
+    required: false
+    type: dict
+
+  version_command:
+    description:
+      - The command to get the currently installed version. (e.g. `some_command --version`)
+        If the output of this command matches the selected asset, downloading and installing
+        the asset is skipped.
+    required: false
+    type: str
+
+  version_regex:
+    description:
+      - A regex for extracting version from the output of `version_command` or tag name.
+        The default is to match 2 or 3 numbers joined by `.`. E.g. 1.12.7 or 1.12
+    required: false
+    type: str
+    default: \d+\.\d+(?:\.\d+)?
+
+  version_file:
+    description:
+      - Path to a file containing the version of currently installed version. The module
+        reads the version from this file instead of `version_command` before installing
+        (to skip download if the desired version is installed) and writes the installed
+        version to this file after successful installation.
+        This is useful for non-executable assets which don't have any `--version` command
+        (e.g. fonts, ...).
+        If you pass `version_file`, you can't pass `version_command` or `version_regex` options.
+    required: false
+    type: path
+
+  move_rules:
+    description:
+      - You need to specify how individual items from an asset should be moved to the system.
+        Privide a list of rules. Each rule should specify `src_regex` and `dst`, and could specify
+        `mode`, `owner`, `group`.
+        An asset can be a single file, or an archive (`.zip`, `.tar.gz`, ...). When asset is an archive,
+        you select by `src_regex` some paths (directories or files) relative to archive root, and they
+        will move to `dst`. Even if the asset is just a single file (not an archive), you should specify
+        a rule to move that file (`src_regex` can be any regex mathing file name, e.g. `.*`).
+    required: true
+    type: list
+"""
+
+RETURN = ""
+
+EXAMPLES = r"""
+- name: install latest version of lego (ACME client)
+  astappiev.common.install_github_release:
+    repo: go-acme/lego
+    asset_regex: lego.*\.tar\.gz
+    version_command: lego --version
+    move_rules:
+      - src_regex: lego
+        dst: /usr/local/bin
+        mode: 0755
+
+- name: install a specific version of sentry-cli
+  astappiev.common.install_github_release:
+    repo: getsentry/sentry-cli
+    tag: "2.8.1"
+    asset_regex: sentry-cli-.*
+    version_command: sentry-cli --version
+    move_rules:
+      - src_regex: sentry-cli-.*
+        dst: /usr/local/bin/sentry-cli
+        mode: 0755
+
+- name: install both executable and data
+  astappiev.common.install_github_release:
+    repo: example/example
+    asset_regex: example-.*\.zip
+    asset_arch_mapping:
+      amd64: "64"  # This repo indicates amd64 as example-64.zip instead of example-amd64.zip or example-x86_64.zip.
+    version_command: example --version
+    move_rules:
+      - src_regex: example
+        dst: /usr/local/bin
+        mode: 0755
+      - src_regex: .*\.dat
+        dst: /usr/local/share/example
+        mode: 0644
+
+- name: install some data file (e.g. font, ...)
+  astappiev.common.install_github_release:
+    repo: example/example
+    asset_regex: exampledata.dat
+    version_file: /usr/local/share/example/exampledata.dat.version
+    move_rules:
+      - src_regex: exampledata.dat
+        dst: /usr/local/share/example
+"""
+
+
+def get_json_url(url: str) -> dict:
+    req = urllib.request.Request(url)
+    if "GITHUB_TOKEN" in os.environ:
+        token = os.environ["GITHUB_TOKEN"]
+        req.add_header("Authorization", "token " + token)
+
+    with urllib.request.urlopen(req) as body:
+        return json.load(body)
+
+
+def files_have_same_content(path1: str, path2: str):
+    if not os.path.isfile(path1) or not os.path.isfile(path2):
+        raise Exception
+    return filecmp.cmp(path1, path2)
+
+
+def extract_version(s: str, version_regex: str) -> Union[str, None]:
+    m = re.search(version_regex, s)
+    if m:
+        return m.group(0)
+
+
+def get_version_installed(
+    module: AnsibleModule,
+    version_command: str,
+    version_regex: str,
+    version_file: str,
+):
+    if version_file:
+        if not os.path.exists(version_file):
+            return None
+        with open(version_file, "r") as fp:
+            return fp.read().strip()
+    if not version_command:
+        return None
+
+    try:
+        rc, result_stdout, _ = module.run_command(version_command, handle_exceptions=False)
+    except (OSError, IOError):
+        return None
+    else:
+        version_installed = extract_version(result_stdout.strip(), version_regex)
+        if not version_installed:
+            module.fail_json(
+                msg='The output of "version_command" did not contain a version.',
+            )
+        return version_installed
+
+
+def get_version_latest(
+    module: AnsibleModule,
+    version_regex: str,
+    version_file: str,
+    release_info: dict,
+):
+    if version_file:
+        return release_info["tag_name"]
+    else:
+        version_to_install = extract_version(release_info["tag_name"], version_regex)
+        if not version_to_install:
+            module.fail_json(
+                msg="The tag name of Github release does not contain a version.",
+            )
+        return version_to_install
+
+
+def decompress_file(path: str):
+    path0, ext = os.path.splitext(path)
+    if ext in [".bz2", ".bz", ".bzip"]:
+        CompressedFile = bz2.BZ2File
+    elif ext in [".xz", ".lzma"]:
+        CompressedFile = lzma.LZMAFile
+    elif ext in [".gz"]:
+        CompressedFile = gzip.GzipFile
+    else:
+        return path
+    with CompressedFile(path) as fr, open(path0, "wb") as fw:
+        shutil.copyfileobj(fr, fw)
+    return path0
+
+
+def move_paths(module: AnsibleModule, paths_to_move: dict, validate_only=False) -> bool:
+    if not validate_only:
+        # We need this to be atomic (move all or nothing).
+        # So we validate first, and then move files.
+        move_paths(module, paths_to_move, validate_only=True)
+    changed = False
+    for dest, path_list in paths_to_move.items():
+        if os.path.isdir(dest):
+            for p in path_list:
+                dst_path = os.path.join(dest, os.path.basename(p))
+                if os.path.isdir(p) and os.path.exists(dst_path):
+                    module.fail_json(msg=f"Destination path '{dst_path}' already exists.")
+            if not validate_only:
+                for abs_path in path_list:
+                    shutil.move(abs_path, os.path.join(dest, os.path.basename(abs_path)))
+                changed = True
+        else:
+            if len(path_list) > 1:
+                module.fail_json(msg=f"Can't move multiple files/dirs to '{dest}'.")
+            abs_path = path_list[0]
+            if not os.path.exists(dest):
+                if not os.path.exists(os.path.dirname(dest)):
+                    module.fail_json(msg=f"Directory '{os.path.dirname(dest)}' does not exist.")
+                if not validate_only:
+                    shutil.move(abs_path, dest)
+                    changed = True
+            else:
+                if os.path.isdir(abs_path):
+                    module.fail_json(msg=f"File '{dest}' exists.")
+                if not validate_only:
+                    if not files_have_same_content(abs_path, dest):
+                        changed = True
+                    shutil.move(abs_path, dest)
+    return changed
+
+
+def set_mode_owner_group(module: AnsibleModule, path: str, mode, owner, group):
+    module.set_owner_if_different(path, owner or os.getuid(), False)
+    module.set_group_if_different(path, group or os.getgid(), False)
+    if mode is not None:
+        module.set_mode_if_different(path, mode, False)
+    if os.path.isdir(path):
+        for item in os.listdir(path):
+            set_mode_owner_group(module, os.path.join(path, item), mode, owner, group)
+
+
+def download_asset(module: AnsibleModule, *, file_name: str, url: str, move_rules: List[dict], archive_format: str):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_path = os.path.join(temp_dir, file_name)
+        urllib.request.urlretrieve(url, file_path)
+
+        file_path = decompress_file(file_path)
+
+        extract_dir = os.path.join(temp_dir, "extract")
+        os.mkdir(extract_dir)
+
+        try:
+            # try extracting if downloaded file is an archive
+            shutil.unpack_archive(file_path, extract_dir, format=(archive_format or None))
+        except shutil.ReadError:
+            shutil.move(file_path, extract_dir)
+
+        regex_found = {}
+        paths_to_move = defaultdict(list)
+        paths_to_move_rule = {}
+
+        for root, dirs, files in os.walk(extract_dir):
+            for item in dirs + files:
+                abs_path = os.path.join(root, item)
+                already_included = any(os.path.commonpath([p, abs_path]) == p for path_list in paths_to_move.values() for p in path_list)
+                if already_included:
+                    continue
+                for move_rule in move_rules:
+                    if re.fullmatch(move_rule["src_regex"], os.path.relpath(abs_path, extract_dir)):
+                        regex_found[move_rule["src_regex"]] = 1
+                        paths_to_move[move_rule["dst"]].append(abs_path)
+                        paths_to_move_rule[abs_path] = move_rule
+                        break
+
+        for p, move_rule in paths_to_move_rule.items():
+            set_mode_owner_group(
+                module,
+                p,
+                move_rule.get("mode"),
+                move_rule.get("owner"),
+                move_rule.get("group"),
+            )
+
+        if len(move_rules) != len(regex_found):
+            module.fail_json(msg="Some or all of the move rules were not found in downloaded assets.")
+        return move_paths(module, paths_to_move)
+
+
+def is_target_exists(module: AnsibleModule, move_rules: List[dict]):
+    for move_rule in move_rules:
+        filename_regex = move_rule["src_regex"].split("/")[-1]
+        if not is_exists_in_dir(move_rule["dst"], filename_regex):
+            return False
+    return True
+
+
+def is_exists_in_dir(dir: str, regex: str):
+    for _, dirs, files in os.walk(dir):
+        for item in dirs + files:
+            if re.fullmatch(regex, item):
+                return True
+    return False
+
+
+class AssetSelector:
+    asset_regex: re.Pattern
+    system: str
+    architectures: List[str]
+
+    class AssetSelectionFailed(Exception):
+        pass
+
+    def __init__(self, asset_regex: re.Pattern, asset_arch_mapping: dict):
+        self.asset_regex = asset_regex
+        self.system = platform.system().lower()  # linux, darwin, windows, ...
+        machine = platform.machine().lower()
+        architectures: List[str] = {
+            "x86_64": ["x86_64", "amd64", "64"],
+            "amd64": ["x86_64", "amd64", "64"],
+            "aarch64": ["aarch64", "arm64"],
+            "arm64": ["aarch64", "arm64"],
+        }.get(machine, [machine])
+        try:
+            arch_mapping_key = list(set(architectures).intersection(asset_arch_mapping.keys()))[0]
+        except IndexError:
+            self.architectures = architectures
+        else:
+            self.architectures = asset_arch_mapping[arch_mapping_key] if isinstance(asset_arch_mapping[arch_mapping_key], list) else [asset_arch_mapping[arch_mapping_key]]
+
+    def asset_matches_system(self, asset: dict) -> bool:
+        return self.system in asset["name"].lower()
+
+    def asset_matches_architecture(self, asset: dict) -> bool:
+        return any(re.search(rf"(?:^|\W|_){re.escape(architecture)}(?:$|\W|_)", asset["name"].lower()) for architecture in self.architectures)
+
+    def select_asset(self, assets: List[dict]) -> dict:
+        filtered_assets = [asset for asset in assets if self.asset_regex.fullmatch(asset["name"])]
+        if len(filtered_assets) == 0:
+            raise self.AssetSelectionFailed('No asset matched "asset_regex".')
+        if len(filtered_assets) == 1:
+            return filtered_assets[0]
+
+        # try filtering assets based on architecture
+        filtered_assets = [asset for asset in filtered_assets if self.asset_matches_architecture(asset)]
+        if len(filtered_assets) == 0:
+            raise self.AssetSelectionFailed(
+                f'More than one asset matched "asset_regex". Tried to filter them based on architecture ({",".join(self.architectures)}), but no asset matched.'
+            )
+        if len(filtered_assets) == 1:
+            return filtered_assets[0]
+
+        # try filtering assets based on system
+        filtered_assets = [asset for asset in filtered_assets if self.asset_matches_system(asset)]
+        if len(filtered_assets) == 0:
+            raise self.AssetSelectionFailed(
+                f'More than one asset matched "asset_regex" and architecture ({",".join(self.architectures)}). '
+                f"Tried to filter them based on system ({self.system}), but no asset matched."
+            )
+        if len(filtered_assets) == 1:
+            return filtered_assets[0]
+
+        raise self.AssetSelectionFailed(f"Couldn't select a unique asset. Assets matched: {len(filtered_assets)}")
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec={
+            # 1. select repo
+            "repo": {"required": True, "type": "str"},
+            # 2. select release
+            #   if tag is not provided, we get the latest release (the most recent non-prerelease, non-draft release)
+            "tag": {"required": False, "type": "str", "default": "latest"},
+            "state": {"required": False, "type": "str", "default": "present"},  # can be either `present` or `latest` similarly to Ansible's `package` module
+            # 3. select asset
+            "asset_regex": {"required": True, "type": "str"},
+            "asset_archive_format": {"required": False, "type": "str"},
+            "asset_arch_mapping": {"required": False, "type": "dict", "default": {}},
+            # 4. (optional) check installed version (to see if download is required)
+            "version_command": {"required": False, "type": "str"},
+            "version_regex": {"required": False, "type": "str"},
+            "version_file": {"required": False, "type": "path"},
+            # 5. after download, move files/dirs to destinations
+            "move_rules": {"required": True, "type": "list", "elements": "dict"},
+        },
+        supports_check_mode=True,
+        mutually_exclusive=(
+            ("version_file", "version_command"),
+            ("version_file", "version_regex"),
+        ),
+        required_by={"version_regex": ["version_command"]},
+    )
+
+    repo: str = module.params["repo"]
+    tag: str = module.params["tag"]
+    state: str = module.params["state"]
+    asset_regex: re.Pattern = re.compile(module.params["asset_regex"])
+    asset_archive_format: str = module.params["asset_archive_format"]
+    asset_arch_mapping: dict = module.params["asset_arch_mapping"]
+    version_command: str = module.params["version_command"]
+    version_regex = module.params["version_regex"] or r"\d+\.\d+(?:\.\d+)?"
+    version_file = module.params["version_file"]
+    move_rules: List[dict] = module.params["move_rules"]
+
+    if not re.match(r"[\w\-_]+/[\w\-_]+", repo):
+        module.fail_json(msg="Invalid repo")
+
+    move_rule_schema = {
+        "src_regex": {"allowed_types": [str], "required": True},
+        "dst": {"allowed_types": [str], "required": True},
+        "mode": {"allowed_types": [str, int], "required": False},
+        "owner": {"allowed_types": [str], "required": False},
+        "group": {"allowed_types": [str], "required": False},
+    }
+
+    for move_rule in move_rules:
+        for k, schema in move_rule_schema.items():
+            if schema.get("required") and k not in move_rule:
+                module.fail_json(msg=f"Some move rule does not have required argument '{k}'.")
+            if k in move_rules and not any(isinstance(move_rule[k], allowed_type) for allowed_type in schema.get("allowed_types", [object])):
+                module.fail_json(msg=f"Some move rule has invalid type for argument '{k}'.")
+        move_rule["dst"] = os.path.expanduser(move_rule["dst"])
+
+    version_installed = get_version_installed(module, version_command, version_regex, version_file)
+
+    if state == "present" and is_target_exists(module, move_rules):
+        module.exit_json(changed=False, prepared="target present", version=version_installed)
+
+    if tag == "latest":
+        # https://docs.github.com/en/rest/releases/releases#get-the-latest-release
+        release_info_url = f"/repos/{repo}/releases/latest"
+    else:
+        # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
+        release_info_url = f"/repos/{repo}/releases/tags/{tag}"
+
+    release_info = get_json_url(f"https://api.github.com{release_info_url}")
+    version_latest = get_version_latest(module, version_regex, version_file, release_info)
+    if version_installed is not None and version_installed == version_latest:
+        module.exit_json(changed=False, msg="version match", version=version_latest)
+
+    version_diff = dict(before=str(version_installed) + "\n", after=str(version_latest) + "\n")
+
+    if module.check_mode:
+        module.exit_json(changed=True, diff=version_diff, version=version_latest)
+
+    try:
+        asset = AssetSelector(asset_regex, asset_arch_mapping).select_asset(release_info["assets"])
+    except AssetSelector.AssetSelectionFailed as e:
+        module.fail_json(msg=str(e))
+        return
+
+    changed = download_asset(
+        module,
+        file_name=asset["name"],
+        url=asset["browser_download_url"],
+        move_rules=move_rules,
+        archive_format=asset_archive_format,
+    )
+
+    if version_file:
+        with open(version_file, "w") as fp:
+            fp.write(release_info["tag_name"])
+
+    module.exit_json(changed=changed, diff=version_diff, version=version_latest)
+
+
+if __name__ == "__main__":
+    main()

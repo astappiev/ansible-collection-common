@@ -1,0 +1,29 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description={{ systemd_timer_name }} Timer
+
+[Timer]
+{% if systemd_timer_on_active_sec is defined %}
+OnActiveSec={{ systemd_timer_on_active_sec }}
+{% endif %}
+{% if systemd_timer_on_boot_sec is defined %}
+OnBootSec={{ systemd_timer_on_boot_sec }}
+{% endif %}
+{% if systemd_timer_on_startup_sec is defined %}
+OnStartupSec={{ systemd_timer_on_startup_sec }}
+{% endif %}
+{% if systemd_timer_on_unit_active_sec is defined %}
+OnUnitActiveSec={{ systemd_timer_on_unit_active_sec }}
+{% endif %}
+{% if systemd_timer_on_unit_inactive_sec is defined %}
+OnUnitInactiveSec={{ systemd_timer_on_unit_inactive_sec }}
+{% endif %}
+{% if systemd_timer_on_calendar is defined %}
+OnCalendar={{ systemd_timer_on_calendar }}
+Persistent={{ systemd_timer_persistent }}
+{% endif %}
+AccuracySec={{ systemd_timer_accuracy_sec }}
+
+[Install]
+WantedBy=timers.target

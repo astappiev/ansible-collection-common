@@ -1,0 +1,65 @@
+---
+- name: Install MariaDB server
+  ansible.builtin.package:
+    name:
+      - mariadb-server
+      - python3-pymysql # Required for community.mysql.mysql_query module
+    state: present
+
+- name: Enable and start MariaDB service
+  ansible.builtin.systemd:
+    name: mariadb
+    enabled: true
+    state: started
+
+- name: Create databases
+  community.mysql.mysql_db:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default('present') }}"
+    target: "{{ item.target | default(omit) }}"
+    encoding: "{{ item.encoding | default(omit) }}"
+    collation: "{{ item.collation | default(omit) }}"
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+  loop: "{{ mariadb_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: mariadb_databases is defined
+  no_log: true
+
+- name: Create users
+  community.mysql.mysql_user:
+    name: "{{ item.name }}"
+    state: present
+    password: "{{ item.password | default(omit) }}"
+    priv: "{{ item.priv | default(omit) }}"
+    host: "{{ item.host | default(omit) }}"
+    host_all: "{{ item.host_all | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+  loop: "{{ mariadb_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - mariadb_users is defined
+
+- name: List databases
+  community.mysql.mysql_info:
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+    filter: databases
+  register: mariadb_info
+  no_log: true
+
+- name: Secure MariaDB installation
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+    query:
+      - "DELETE FROM mysql.user WHERE User='';"
+      - "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+      - "DROP DATABASE IF EXISTS test;"
+      - "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+      - "FLUSH PRIVILEGES;"
+    single_transaction: true
+  when: "'test' in mariadb_info.databases"
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

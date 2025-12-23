@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description={{ systemd_timer_name }} Service
+
+[Service]
+Type=oneshot
+{% if systemd_timer_envfile is defined %}
+EnvironmentFile={{ systemd_timer_envfile }}
+{% endif %}
+{% if systemd_timer_precommand is defined %}
+ExecStartPre={{ systemd_timer_precommand }}
+{% endif %}
+ExecStart={{ systemd_timer_command }}
+{% if systemd_timer_user is defined and (systemd_scope is not defined or systemd_scope != 'user') %}
+User={{ systemd_timer_user }}
+{% endif %}
+{% if systemd_timer_workingdir is defined %}
+WorkingDirectory={{ systemd_timer_workingdir }}
+{% endif %}
