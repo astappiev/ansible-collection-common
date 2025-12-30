@@ -93,12 +93,3 @@
     exclusive: "{{ user.authorized_keys_exclusive | default(false) }}"
   when:
     - user.authorized_keys is defined
-
-
-# Other tasks per user
-
-- name: user | Include profile tasks for {{ user.name }}
-  ansible.builtin.include_tasks: user_profile.yml
-  vars:
-    ansible_become: true
-    ansible_become_user: "{{ user.name }}"

@@ -29,7 +29,7 @@
     owner: root
     group: root
     validate: "{{ autorestic_binary_path }} check -c %s"
-  when: autorestic_locations | length > 0 or autorestic_backends | length > 0
+  when: autorestic_locations | length > 0 and autorestic_backends | length > 0
 
 - name: Add autorestic systemd timer
   ansible.builtin.include_role:

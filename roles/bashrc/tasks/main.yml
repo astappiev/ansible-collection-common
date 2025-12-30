@@ -1,0 +1,33 @@
+---
+- name: Create directory {{ bashrc_dir }}
+  ansible.builtin.file:
+    path: "{{ bashrc_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Enable bashrc.d scripts
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    prepend_newline: true
+    append_newline: true
+    create: false
+    marker: "# {mark} ANSIBLE MANAGED bashrc.d inclusion"
+    block: |
+      if [ -d {{ bashrc_dir }} ]; then
+        for i in {{ bashrc_dir }}/*.sh; do
+          if [ -r $i ]; then
+            . $i
+          fi
+        done
+        unset i
+      fi
+  loop:
+    - "{{ bashrc_global_path }}"
+    - "{{ bashrc_global_path_zsh }}"
+  register: _bashrc_file_edits
+  failed_when:
+    - _bashrc_file_edits.failed is defined
+    - _bashrc_file_edits.failed
+    - _bashrc_file_edits.rc != 257  # Destination does not exist

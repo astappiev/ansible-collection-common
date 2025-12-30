@@ -1,0 +1,16 @@
+---
+- name: Copy colored prompt definitions to bashrc.d
+  ansible.builtin.copy:
+    src: colored.sh
+    dest: "{{ bashrc_dir }}/5-colored.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy alias definitions to bashrc.d
+  ansible.builtin.copy:
+    src: aliases.sh
+    dest: "{{ bashrc_dir }}/10-aliases.sh"
+    owner: root
+    group: root
+    mode: "0755"

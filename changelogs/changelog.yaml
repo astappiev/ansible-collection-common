@@ -1,11 +1,22 @@
 ---
 ancestor: null
 releases:
+  1.2.0:
+    release_date: '2025-12-30'
+    changes:
+      release_summary: Added bashrc, bashrc_aliases roles, improved sshd and hostname roles.
+      minor_changes:
+        - Added bashrc role to manage global bashrc and bashrc.d directory
+        - Added bashrc_aliases role for common aliases and colored output
+        - hostname role now supports colored prompt based on hostname color
+        - sshd role now supports authorized_keys management for root and stricter configuration
+        - users role refactored to remove per-user bash profile management
+        - restic role fixed logic error in autorestic check
   1.1.0:
     release_date: '2025-12-23'
     changes:
       release_summary: Added backup management and database roles.
-      minor_changes:
+      major_changes:
         - Added restic role for automated backup management with restic and autorestic
         - Added mariadb role for MariaDB server installation and database management
         - Added redis role for Redis server installation

@@ -2,9 +2,27 @@
 - name: Include assertions
   ansible.builtin.include_tasks: assert.yml
 
-- name: Configure SSH port
+- name: Install openssh-server package
+  ansible.builtin.package:
+    name: openssh-server
+    state: present
+
+- name: Configure sshd service
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^#?Port '
-    line: 'Port {{ sshd_port }}'
+    regexp: "^#?{{ item.key }} "
+    line: "{{ item.key }} {{ item.value }}"
+  loop:
+    - { key: "Port", value: "{{ sshd_port }}" }
+    - { key: "PubkeyAuthentication", value: "yes" }
+    - { key: "PermitRootLogin", value: "{{ sshd_permit_root_login }}" }
+    - { key: "PasswordAuthentication", value: "{{ 'yes' if sshd_password_authentication | bool else 'no' }}" }
   notify: Restart sshd
+
+- name: Ensure authorized keys are present for root user
+  ansible.posix.authorized_key:
+    user: root
+    key: "{{ sshd_authorized_keys | join('\n') }}"
+    state: present
+    exclusive: "{{ sshd_remove_authorized_keys }}"
+  when: sshd_authorized_keys | length > 0

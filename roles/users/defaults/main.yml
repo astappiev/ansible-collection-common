@@ -20,5 +20,14 @@
 users_list:
   - name: "{{ ansible_user }}"
 
+# List of groups to create
+# users_groups:
+#   - name: examplegroup
+#     state: present
+#     gid: 1001
+#     system: false
+#     sudo_options: "ALL=(ALL) NOPASSWD: ALL"
+users_groups: []
+
 # The location to store ssh keys for user
 users_pubkeys_dir: "{{ inventory_dir }}/ssh_keys"

@@ -14,3 +14,7 @@
   when:
     - hostname is defined and hostname != ""
     - ansible_connection not in [ "container", "docker", "community.docker.docker" ]
+
+- name: Include hostname prompt color configuration
+  ansible.builtin.include_tasks: prompt_color.yml
+  when: hostname_prompt_color is defined and hostname_prompt_color | length > 0

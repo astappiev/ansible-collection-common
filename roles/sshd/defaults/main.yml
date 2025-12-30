@@ -1,2 +1,14 @@
 # SSH port number to configure
 sshd_port: 22
+
+# List of authorized SSH keys for the root user
+sshd_authorized_keys: []
+
+# Whether to remove authorized keys not in the `sshd_authorized_keys` list
+sshd_remove_authorized_keys: true
+
+# Whether to permit root login via SSH
+sshd_permit_root_login: "{{ 'prohibit-password' if sshd_authorized_keys | length > 0 else 'yes' }}"
+
+# Enable or disable password authentication via SSH
+sshd_password_authentication: "{{ sshd_authorized_keys | length == 0 }}"

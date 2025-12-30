@@ -4,3 +4,8 @@ hostname: "{{ inventory_hostname_short }}"  # noqa: var-naming[no-role-prefix]
 
 # Should the machine be rebooted when the hostname is changed?
 hostname_reboot: true
+
+# Color for hostname in bash/zsh prompt
+# Safe options to use: red, blue, green, cyan, yellow, magenta, black, white
+# hostname_prompt_color: "{{ 'blue' if ansible_hostname | regex_search('^.*node[0-9]+$') else 'cyan' }}"
+# hostname_prompt_color: "red"

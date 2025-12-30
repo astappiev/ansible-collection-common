@@ -1,0 +1,24 @@
+---
+
+- name: Configure hostname color prompt (bash)
+  ansible.builtin.template:
+    src: prompt_color_bash.sh
+    dest: "{{ bashrc_dir }}/prompt_color_bash.sh"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check if zsh is installed
+  ansible.builtin.command: "which zsh"
+  register: hostname_zsh_check
+  changed_when: false
+  failed_when: false
+
+- name: Configure hostname color prompt (zsh)
+  ansible.builtin.template:
+    src: prompt_color_zsh.sh
+    dest: "{{ bashrc_dir }}/prompt_color_zsh.sh"
+    owner: root
+    group: root
+    mode: "0644"
+  when: hostname_zsh_check.rc == 0

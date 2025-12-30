@@ -1,0 +1,4 @@
+---
+dependencies:
+  - role: bashrc
+    when: hostname_prompt_color is defined and hostname_prompt_color | length > 0

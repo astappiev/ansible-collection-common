@@ -8,13 +8,7 @@
     loop_var: group
   when:
     - users_groups is defined
-
-- name: Ensure the /etc/sudoers.d directory is included
-  ansible.builtin.lineinfile:
-    path: /etc/sudoers
-    line: "@includedir /etc/sudoers.d"
-    regexp: "^(@|#)includedir"
-    validate: "visudo --check --file %s"
+    - users_groups | length > 0
 
 - name: Loop over users
   ansible.builtin.include_tasks:
@@ -25,3 +19,11 @@
     loop_var: user
   when:
     - users_list is defined
+    - users_list | length > 0
+
+- name: Ensure the /etc/sudoers.d directory is included
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "@includedir /etc/sudoers.d"
+    regexp: "^(@|#)includedir"
+    validate: "visudo --check --file %s"

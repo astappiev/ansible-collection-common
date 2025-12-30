@@ -1,0 +1,8 @@
+---
+# The directory to store additional bashrc files
+bashrc_dir: /etc/bashrc.d
+
+# The global bashrc file path
+bashrc_global_path: /etc/bash.bashrc
+# The global zshrc file path
+bashrc_global_path_zsh: /etc/zsh/zshrc
