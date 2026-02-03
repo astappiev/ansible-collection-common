@@ -41,7 +41,7 @@
     - name: user | Write public ssh key for {{ user.name }}
       ansible.builtin.copy:
         content: "{{ users_manage_user.ssh_public_key }}"
-        dest: "{{ users_pubkeys_dir }}/{{ inventory_hostname }}_{{ user.name }}.pub"
+        dest: "{{ users_pubkeys_dir }}/{{ inventory_hostname_short }}_{{ user.name }}.pub"
         mode: "0600"
       delegate_to: localhost
       become: false

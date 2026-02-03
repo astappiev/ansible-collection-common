@@ -11,6 +11,7 @@
     name: mariadb
     enabled: true
     state: started
+  when: not ansible_check_mode
 
 - name: Create databases
   community.mysql.mysql_db:

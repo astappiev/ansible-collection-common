@@ -13,6 +13,7 @@
   register: hostname_zsh_check
   changed_when: false
   failed_when: false
+  check_mode: false
 
 - name: Configure hostname color prompt (zsh)
   ansible.builtin.template:

@@ -1,0 +1,6 @@
+---
+# List of packages to install
+packages_list: []
+
+# State of the packages (present, latest, absent)
+packages_state: present

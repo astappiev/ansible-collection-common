@@ -17,8 +17,7 @@
 #     authorized_keys_exclusive: true
 #     sudo_options: "ALL=(ALL) NOPASSWD: ALL"
 #     password_validity_days: 90
-users_list:
-  - name: "{{ ansible_user }}"
+users_list: []
 
 # List of groups to create
 # users_groups:

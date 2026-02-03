@@ -10,6 +10,10 @@ case $- in
 esac
 
 __set_bashrc_color_prompt() {
+    # Only run once using guard variable
+    [ -n "${__bashrc_color_prompt_set:-}" ] && return
+    __bashrc_color_prompt_set=1
+
     # set variable identifying the chroot you work in (used in the prompt below)
     if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
         debian_chroot=$(cat /etc/debian_chroot)
@@ -20,10 +24,6 @@ __set_bashrc_color_prompt() {
     else
         PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
     fi
-
-    # Remove this function from PROMPT_COMMAND to run only once
-    PROMPT_COMMAND="${PROMPT_COMMAND//__set_bashrc_color_prompt/}"
-    unset -f __set_bashrc_color_prompt
 }
 
 PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND;}__set_bashrc_color_prompt"

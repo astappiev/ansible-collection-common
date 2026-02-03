@@ -1,6 +1,24 @@
 ---
 ancestor: null
 releases:
+  1.3.0:
+    release_date: '2026-02-03'
+    changes:
+      release_summary: Refactored package management, improved role defaults and check mode support.
+      breaking_changes:
+        - Removed admintools role - use the new packages role instead
+        - users role now defaults to empty users_list instead of including ansible_user
+        - hostname role now defaults hostname_reboot to false instead of true
+      major_changes:
+        - Added packages role for generic package installation across different package managers
+      minor_changes:
+        - sshd role now integrates with users_list to automatically extract root authorized keys
+        - hostname role now ensures dbus service is enabled and running before setting hostname
+        - users role SSH key filenames now use inventory_hostname_short for better readability
+      bugfixes:
+        - Fixed hostname bash prompt color function to use guard variable instead of self-removal
+        - Added check_mode guard to mariadb service start task
+        - Added check_mode false to hostname zsh detection task for proper check mode support
   1.2.0:
     release_date: '2025-12-30'
     changes:

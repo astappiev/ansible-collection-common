@@ -1,9 +1,0 @@
----
-# List of admin tools packages to be installed
-admintools_packages:
-  - curl
-  - wget
-  - zip
-  - unzip
-  - git
-  - btop

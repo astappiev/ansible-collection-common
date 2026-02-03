@@ -1,5 +1,0 @@
----
-- name: Install admintools
-  ansible.builtin.package:
-    name: "{{ admintools_packages }}"
-    state: present
