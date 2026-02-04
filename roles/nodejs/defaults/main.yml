@@ -1,0 +1,26 @@
+---
+# Installation source for Node.js package
+# Options:
+# - 'distro' - Install from system package manager (e.g., nodejs from distribution repos)
+# - 'nodesource' - Install from nodesource.com repository (recommended for latest features)
+nodejs_install_source: distro
+
+# Version of Node.js to install via NodeSource.
+# Can be any version available at https://nodesource.com/products/distributions, e.g., "22.x", "24.x".
+# Only used if nodejs_install_source is set to "nodesource".
+nodejs_version: "lts.x"
+
+# List of package managers to enable via Corepack.
+# Corepack manages package managers like npm, pnpm, and yarn.
+nodejs_corepack_enable: []
+
+# List of global packages to install with NPM.
+# Can be a list of package names (strings) or objects with name, version, and state properties.
+nodejs_npm_global_packages: []
+#  # Install a specific version of a package.
+#  - name: jslint
+#    version: 0.9.3
+#  # Install the latest stable release of a package.
+#  - name: node-sass
+#  # This shorthand syntax also works (same as previous example).
+#  - node-sass

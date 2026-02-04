@@ -1,0 +1,12 @@
+---
+# Installation source for Docker
+# Options:
+# - 'distro' - Install from system package manager (e.g., docker.io from distribution repos)
+# - 'docker-ce' - Install from docker.com official repository (recommended for latest features)
+docker_install_source: distro
+
+# Users to add to the docker group (allows running docker without sudo)
+docker_users: []
+
+# Whether to install simple Docker CLI scripts and add aliases
+docker_simple_cli: true

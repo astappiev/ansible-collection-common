@@ -1,0 +1,29 @@
+---
+- name: Validate variables
+  ansible.builtin.import_tasks: assert.yml
+
+- name: Install Docker from system packages
+  ansible.builtin.import_tasks: install-system.yml
+  when: docker_install_source == "distro"
+
+- name: Install Docker from docker.com repository
+  ansible.builtin.import_tasks: install-docker-ce.yml
+  when: docker_install_source == "docker-ce"
+
+- name: Ensure Docker service is enabled and started
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add users to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+  when: docker_users | length > 0
+
+- name: Install simple Docker CLI
+  ansible.builtin.import_tasks: simple.yml
+  when: docker_simple_cli

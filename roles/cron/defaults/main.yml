@@ -1,0 +1,41 @@
+---
+# List of cron jobs to manage
+# Each item can have the following properties:
+#   name: (required) Description of the cron job
+#   job: (required) The command to execute
+#   minute: (optional) Minute when the job should run (default: "*")
+#   hour: (optional) Hour when the job should run (default: "*")
+#   day: (optional) Day of month when the job should run (default: "*")
+#   month: (optional) Month when the job should run (default: "*")
+#   weekday: (optional) Day of week when the job should run (default: "*")
+#   user: (optional) User to run the job as (default: root)
+#   state: (optional) Whether the cron job should be present or absent (default: present)
+#   disabled: (optional) If true, comment out the cron job (default: false)
+#   special_time: (optional) Special time specification (@reboot, @hourly, @daily, @weekly, @monthly, @yearly, @annually)
+#   cron_file: (optional) If specified, use this file under /etc/cron.d/ instead of user crontab
+#   backup: (optional) If true, backup the crontab before modification (default: false)
+#   env: (optional) If true, manage an environment variable instead of a job (default: false)
+cron_jobs: []
+
+# Example configuration:
+# cron_jobs:
+#   - name: Daily backup
+#     job: /usr/local/bin/backup.sh
+#     special_time: daily
+#     user: root
+#
+#   - name: Clear temp files
+#     job: find /tmp -type f -atime +7 -delete
+#     minute: "0"
+#     hour: "3"
+#     day: "*"
+#     month: "*"
+#     weekday: "*"
+#     user: root
+#
+#   - name: Set PATH for cron
+#     env: true
+#     name: PATH
+#     job: /usr/local/bin:/usr/bin:/bin
+#     user: www-data
+#     cron_file: app_tasks

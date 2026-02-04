@@ -1,0 +1,38 @@
+---
+- name: Ensure old simple-docker scripts are removed
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_facts['env']['HOME'] }}/.local/d.sh"
+    - "{{ ansible_facts['env']['HOME'] }}/.local/dc.sh"
+
+- name: Remove simple-docker aliases from .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+    marker: "# {mark} Docker CLI simplified"
+    state: absent
+
+- name: Download d.sh (docker simple) script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/astappiev/simple-docker/refs/heads/main/d.sh
+    dest: "{{ binary_install_dir | default('/usr/local/bin') }}/d.sh"
+    mode: "0755"
+
+- name: Download dc.sh (docker compose simple) script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/astappiev/simple-docker/refs/heads/main/dc.sh
+    dest: "{{ binary_install_dir | default('/usr/local/bin') }}/dc.sh"
+    mode: "0755"
+
+- name: Add simple-docker aliases for all users
+  ansible.builtin.copy:
+    dest: /etc/profile.d/simple-docker.sh
+    content: |
+      # Ansible managed
+
+      alias d='. {{ binary_install_dir | default('/usr/local/bin') }}/d.sh'
+      alias dc='. {{ binary_install_dir | default('/usr/local/bin') }}/dc.sh'
+    mode: "0644"
+    owner: root
+    group: root

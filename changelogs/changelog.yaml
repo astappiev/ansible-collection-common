@@ -1,6 +1,14 @@
 ---
 ancestor: null
 releases:
+  1.4.0:
+    release_date: '2026-02-04'
+    changes:
+      release_summary: Added cron, docker, and nodejs roles.
+      major_changes:
+        - Added cron role for managing scheduled tasks
+        - Added docker role with support for both distribution packages and docker-ce repository installation
+        - Added nodejs role with support for both distribution packages and NodeSource repository installation
   1.3.0:
     release_date: '2026-02-03'
     changes:

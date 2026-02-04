@@ -1,0 +1,39 @@
+---
+- name: Manage cron jobs
+  when:
+    - cron_jobs is defined
+    - cron_jobs | length > 0
+  block:
+    - name: Include assert.yml
+      ansible.builtin.import_tasks: assert.yml
+      run_once: true
+      delegate_to: localhost
+
+    - name: Install cron packages
+      ansible.builtin.package:
+        name: "{{ cron_packages }}"
+        state: present
+
+    - name: Ensure cron service is started and enabled
+      ansible.builtin.service:
+        name: "{{ cron_service }}"
+        state: started
+        enabled: true
+
+    - name: Manage cron jobs
+      ansible.builtin.cron:
+        name: "{{ item.name }}"
+        job: "{{ item.job }}"
+        minute: "{{ item.minute | default('*') }}"
+        hour: "{{ item.hour | default('*') }}"
+        day: "{{ item.day | default('*') }}"
+        month: "{{ item.month | default('*') }}"
+        weekday: "{{ item.weekday | default('*') }}"
+        user: "{{ item.user | default('root') }}"
+        state: "{{ item.state | default('present') }}"
+        disabled: "{{ item.disabled | default(false) }}"
+        special_time: "{{ item.special_time | default(omit) }}"
+        cron_file: "{{ item.cron_file | default(omit) }}"
+        backup: "{{ item.backup | default(false) }}"
+        env: "{{ item.env | default(false) }}"
+      loop: "{{ cron_jobs }}"

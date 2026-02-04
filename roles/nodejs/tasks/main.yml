@@ -1,0 +1,32 @@
+---
+- name: Include assert.yml
+  ansible.builtin.import_tasks: assert.yml
+  run_once: true
+  delegate_to: localhost
+
+- name: Install Node.js from standard repository
+  ansible.builtin.import_tasks: install-system.yml
+  when: nodejs_install_source == 'distro'
+
+- name: Install Node.js from NodeSource repository
+  ansible.builtin.import_tasks: install-nodesource.yml
+  when: nodejs_install_source == 'nodesource'
+
+- name: Enable specified package managers via Corepack
+  ansible.builtin.command:
+    cmd: corepack enable "{{ item }}"
+  with_items: "{{ nodejs_corepack_enable }}"
+  when:
+    - nodejs_corepack_enable | length > 0
+  changed_when: false
+  register: nodejs_corepack_result
+  failed_when: nodejs_corepack_result.rc != 0
+
+- name: Ensure npm global packages are installed
+  community.general.npm:
+    name: "{{ item.name | default(item) }}"
+    version: "{{ item.version | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+    global: true
+  with_items: "{{ nodejs_npm_global_packages }}"
+  when: nodejs_npm_global_packages | length > 0

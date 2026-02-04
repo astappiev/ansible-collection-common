@@ -1,0 +1,21 @@
+---
+- name: Remove old/conflicting Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: absent
+    purge: true
+
+- name: Install Docker packages from system repository
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-cli
+      - docker-buildx
+      - docker-compose
+    state: present
+    update_cache: true

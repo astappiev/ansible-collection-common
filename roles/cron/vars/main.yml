@@ -1,0 +1,15 @@
+---
+
+_cron_packages:
+  default:
+    - cron
+  RedHat:
+    - cronie
+
+cron_packages: "{{ _cron_packages[ansible_facts['os_family']] | default(_cron_packages['default']) }}"
+
+_cron_service:
+  default: cron
+  RedHat: crond
+
+cron_service: "{{ _cron_service[ansible_facts['os_family']] | default(_cron_service['default']) }}"
