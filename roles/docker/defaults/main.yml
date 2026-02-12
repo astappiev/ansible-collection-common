@@ -10,3 +10,12 @@ docker_users: []
 
 # Whether to install simple Docker CLI scripts and add aliases
 docker_simple_cli: true
+
+# Whether to set up Docker for rootless mode (allows running docker without sudo)
+docker_rootless: false
+
+# List of users for which to set up rootless Docker (only applicable if docker_rootless is true)
+docker_rootless_users: []
+
+# If you want to change the default unprivileged port start for rootless Docker
+# docker_unprivileged_port_start: 80

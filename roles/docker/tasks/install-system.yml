@@ -9,6 +9,7 @@
       - docker-compose-plugin
     state: absent
     purge: true
+  notify: Apt update
 
 - name: Install Docker packages from system repository
   ansible.builtin.apt:
@@ -18,4 +19,3 @@
       - docker-buildx
       - docker-compose
     state: present
-    update_cache: true

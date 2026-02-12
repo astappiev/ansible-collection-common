@@ -1,0 +1,28 @@
+---
+- name: Apt update
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Restart docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when: not docker_rootless and not ansible_check_mode
+
+- name: User docker restart
+  become: true
+  become_user: "{{ item }}"
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+    scope: user
+  loop: "{{ docker_rootless_users }}"
+  when: docker_rootless and not ansible_check_mode
+
+- name: User daemon reload
+  become: true
+  become_user: "{{ item }}"
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: user
+  loop: "{{ docker_rootless_users }}"

@@ -15,6 +15,7 @@
     name: docker
     state: started
     enabled: true
+  when: not docker_rootless and not ansible_check_mode
 
 - name: Add users to docker group
   ansible.builtin.user:
@@ -23,6 +24,14 @@
     append: true
   loop: "{{ docker_users }}"
   when: docker_users | length > 0
+
+- name: Install rootless Docker prerequisites
+  ansible.builtin.import_tasks: rootless-prerequisites.yml
+  when: docker_rootless
+
+- name: Configure rootless Docker
+  ansible.builtin.import_tasks: rootless.yml
+  when: docker_rootless
 
 - name: Install simple Docker CLI
   ansible.builtin.import_tasks: simple.yml

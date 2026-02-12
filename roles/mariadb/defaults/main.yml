@@ -1,12 +1,21 @@
 ---
+# Where to store the database files
+# mariadb_datadir: /var/lib/mysql
+
+# Bind address for the MariaDB server. Set to 0.0.0.0 to listen on all interfaces.
+# mariadb_bind_address: 127.0.0.1
+
+# This is used by the Ansible modules to connect to the database server.
 mariadb_unix_socket: /var/run/mysqld/mysqld.sock
 
+# A list of databases to create
 mariadb_databases: []
 #   - name: db1
 #     collation: utf8_general_ci
 #     encoding: utf8
 #     replicate: true|false
 
+# A list of users to create
 mariadb_users: []
 #   - name: user
 #     host: 100.64.200.10

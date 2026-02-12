@@ -1,0 +1,47 @@
+---
+- name: Install rootless Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - uidmap
+    state: present
+
+- name: Disable root Docker services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - docker.service
+    - docker.socket
+
+- name: Remove root Docker socket
+  ansible.builtin.file:
+    path: /var/run/docker.sock
+    state: absent
+
+- name: Install rootless Docker dependencies
+  ansible.builtin.apt:
+    name:
+      - dbus-user-session
+      - rootlesskit
+      - slirp4netns
+      - fuse-overlayfs
+    state: present
+  when: docker_install_source == 'distro'
+
+- name: Create symbolic link for docker binary
+  ansible.builtin.file:
+    src: /usr/bin/docker
+    dest: /usr/share/docker.io/contrib/docker
+    state: link
+    force: true
+  when: docker_install_source == 'distro'
+
+- name: Configure unprivileged port start
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_unprivileged_port_start
+    value: "{{ docker_unprivileged_port_start }}"
+    state: present
+    sysctl_file: /etc/sysctl.conf
+    reload: true
+  when: docker_unprivileged_port_start is defined and docker_unprivileged_port_start > 0

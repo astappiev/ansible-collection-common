@@ -1,6 +1,16 @@
 ---
 ancestor: null
 releases:
+  1.5.0:
+    release_date: '2026-02-12'
+    changes:
+      release_summary: Improved role configurations and added rootless Docker support.
+      breaking_changes:
+        - sshd role defaults simplified - complex logic for extracting root keys from `users_list` moved from defaults to tasks
+      minor_changes:
+        - docker role now supports rootless mode configuration with `docker_rootless` and `docker_root_service` variables
+        - mariadb role added configuration support for `datadir` and `bind_address` settings
+        - Minor fixes and improvements
   1.4.0:
     release_date: '2026-02-04'
     changes:

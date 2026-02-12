@@ -56,10 +56,13 @@ autorestic_locations: {}  # noqa: var-naming[no-role-prefix]
 #   remote:
 #     type: b2
 #     path: 'myBucket:backup/home'
+#     requireKey: true
 #     env:
 #       B2_ACCOUNT_ID: account_id
 #       B2_ACCOUNT_KEY: account_key
 #   hdd:
 #     type: local
 #     path: /mnt/my_external_storage
+#     key: somepassword
+#     requireKey: true
 autorestic_backends: {}  # noqa: var-naming[no-role-prefix]

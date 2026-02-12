@@ -25,4 +25,7 @@
     key: "{{ sshd_authorized_keys | join('\n') }}"
     state: present
     exclusive: "{{ sshd_remove_authorized_keys }}"
-  when: sshd_authorized_keys | length > 0
+  when:
+    - sshd_authorized_keys | length > 0
+    - (users_list | default([]) | selectattr('name', 'equalto', 'root') |
+          map(attribute='authorized_keys') | first | default('') | split('\n') | select | list) | length == 0

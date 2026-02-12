@@ -21,6 +21,7 @@
     components: stable
     signed_by: https://download.docker.com/linux/debian/gpg
     state: present
+  notify: Apt update
 
 - name: Install Docker packages
   ansible.builtin.apt:
@@ -31,4 +32,3 @@
       - docker-buildx-plugin
       - docker-compose-plugin
     state: present
-    update_cache: true

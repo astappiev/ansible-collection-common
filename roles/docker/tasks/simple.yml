@@ -4,6 +4,7 @@
     path: "{{ item }}"
     state: absent
   loop:
+    - "/etc/profile.d/simple-docker.sh"
     - "{{ ansible_facts['env']['HOME'] }}/.local/d.sh"
     - "{{ ansible_facts['env']['HOME'] }}/.local/dc.sh"
 
@@ -27,7 +28,7 @@
 
 - name: Add simple-docker aliases for all users
   ansible.builtin.copy:
-    dest: /etc/profile.d/simple-docker.sh
+    dest: "{{ bashrc_dir }}/simple-docker.sh"
     content: |
       # Ansible managed
 

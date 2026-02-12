@@ -1,0 +1,64 @@
+---
+- name: Check if lingering is enabled for rootless users
+  ansible.builtin.stat:
+    path: "/var/lib/systemd/linger/{{ item }}"
+  loop: "{{ docker_rootless_users }}"
+  register: _linger_status
+
+- name: Enable lingering for rootless users
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ item.item }}
+  loop: "{{ _linger_status.results }}"
+  when:
+    - not item.stat.exists
+  register: _enable_linger
+  changed_when: _enable_linger.rc == 0
+  failed_when: _enable_linger.rc != 0
+
+- name: Configure Docker environment for rootless users
+  ansible.builtin.blockinfile:
+    path: "/home/{{ item }}/.bashrc"
+    block: |
+      export PATH=/usr/share/docker.io/contrib:$PATH
+      export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Docker rootless"
+    create: true
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0644'
+  loop: "{{ docker_rootless_users }}"
+
+- name: Install rootless Docker for users
+  become: true
+  become_user: "{{ item }}"
+  ansible.builtin.shell: export PATH=/usr/share/docker.io/contrib:$PATH && dockerd-rootless-setuptool.sh install
+  loop: "{{ docker_rootless_users }}"
+  register: _rootless_install
+  changed_when: "'Installed' in _rootless_install.stdout"
+  failed_when:
+    - _rootless_install.rc != 0
+
+- name: Create systemd user directory for rootless Docker
+  ansible.builtin.file:
+    path: "/home/{{ item }}/.config/systemd/user/docker.service.d"
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0755'
+  loop: "{{ docker_rootless_users }}"
+
+- name: Configure rootless Docker service
+  ansible.builtin.copy:
+    content: |
+      # Ansible managed
+
+      [Service]
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=slirp4netns"
+    dest: "/home/{{ item }}/.config/systemd/user/docker.service.d/override.conf"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0644'
+  loop: "{{ docker_rootless_users }}"
+  notify:
+    - User daemon reload
+    - User docker restart

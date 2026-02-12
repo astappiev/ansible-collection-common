@@ -6,6 +6,28 @@
       - python3-pymysql # Required for community.mysql.mysql_query module
     state: present
 
+- name: Configure MariaDB datadir
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^#?datadir\s*='
+    line: "datadir                 = {{ mariadb_datadir }}"
+    state: present
+  when:
+    - mariadb_datadir is defined
+    - mariadb_datadir | length > 0
+  notify: Restart MariaDB
+
+- name: Configure MariaDB bind address
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^#?bind-address\s*='
+    line: "bind-address            = {{ mariadb_bind_address }}"
+    state: present
+  when:
+    - mariadb_bind_address is defined
+    - mariadb_bind_address | length > 0
+  notify: Restart MariaDB
+
 - name: Enable and start MariaDB service
   ansible.builtin.systemd:
     name: mariadb
