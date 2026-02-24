@@ -25,7 +25,7 @@
     create: true
     owner: "{{ item }}"
     group: "{{ item }}"
-    mode: '0644'
+    mode: '0600'
   loop: "{{ docker_rootless_users }}"
 
 - name: Install rootless Docker for users
@@ -44,7 +44,7 @@
     state: directory
     owner: "{{ item }}"
     group: "{{ item }}"
-    mode: '0755'
+    mode: '0700'
   loop: "{{ docker_rootless_users }}"
 
 - name: Configure rootless Docker service
@@ -57,7 +57,7 @@
     dest: "/home/{{ item }}/.config/systemd/user/docker.service.d/override.conf"
     owner: "{{ item }}"
     group: "{{ item }}"
-    mode: '0644'
+    mode: '0600'
   loop: "{{ docker_rootless_users }}"
   notify:
     - User daemon reload
