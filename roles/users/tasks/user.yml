@@ -88,7 +88,7 @@
 - name: user | Deploy authorized keys for {{ user.name }}
   ansible.posix.authorized_key:
     user: "{{ user.name }}"
-    key: "{{ user.authorized_keys }}"
+    key: "{{ user.authorized_keys if user.authorized_keys is string else user.authorized_keys | join('\n') }}"
     state: present
     exclusive: "{{ user.authorized_keys_exclusive | default(false) }}"
   when:

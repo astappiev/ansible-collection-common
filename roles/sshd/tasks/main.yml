@@ -27,5 +27,4 @@
     exclusive: "{{ sshd_remove_authorized_keys }}"
   when:
     - sshd_authorized_keys | length > 0
-    - (users_list | default([]) | selectattr('name', 'equalto', 'root') |
-          map(attribute='authorized_keys') | first | default('') | split('\n') | select | list) | length == 0
+    - (users_list | default([]) | selectattr('name', 'equalto', 'root') | selectattr('authorized_keys', 'defined') | list | length) == 0
