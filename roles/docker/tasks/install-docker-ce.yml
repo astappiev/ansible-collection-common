@@ -20,6 +20,7 @@
     suites: "{{ ansible_facts['distribution_release'] }}"
     components: stable
     signed_by: https://download.docker.com/linux/debian/gpg
+    install_python_debian: true
     state: present
   notify: Apt update
 
