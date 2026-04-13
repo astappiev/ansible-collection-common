@@ -1,0 +1,57 @@
+---
+- name: Configure Docker environment
+  ansible.builtin.blockinfile:
+    path: "/home/{{ user }}/.bashrc"
+    block: |
+      export PATH=/usr/share/docker.io/contrib:$PATH
+      export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Docker rootless"
+    create: true
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0600'
+
+- name: Check if rootless Docker service is running
+  ansible.builtin.systemd:
+    name: docker
+    scope: user
+  register: _docker_service_status
+  changed_when: false
+  failed_when: false
+
+- name: Install rootless Docker
+  ansible.builtin.shell: export PATH=/usr/share/docker.io/contrib:$PATH && dockerd-rootless-setuptool.sh install
+  register: _rootless_install
+  changed_when:
+    - _rootless_install.rc == 0
+    - "'Installed' in _rootless_install.stdout"
+  failed_when:
+    - _rootless_install.rc != 0
+  when:
+    - (_docker_service_status.status | default({})).ActiveState | default('inactive') != 'active'
+
+- name: Create systemd user directory for Docker
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.config/systemd/user/docker.service.d"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0700'
+
+- name: Configure rootless Docker service
+  ansible.builtin.copy:
+    content: |
+      # Ansible managed
+
+      [Service]
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=slirp4netns"
+      # Alternative, if you need IPv6 support (apt install passt)
+      # Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_NET=pasta"
+      # Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=implicit"
+    dest: "/home/{{ user }}/.config/systemd/user/docker.service.d/override.conf"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0600'
+  notify:
+    - User daemon reload
+    - User docker restart
