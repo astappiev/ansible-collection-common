@@ -1,11 +1,23 @@
 ---
+- name: Assert role variables
+  ansible.builtin.import_tasks: assert.yml
+
 - name: Install Redis server
   ansible.builtin.package:
     name: redis-server
     state: present
 
+- name: Set redis password
+  ansible.builtin.lineinfile:
+    path: /etc/redis/redis.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: "^#?\\s?requirepass", line: "requirepass {{ redis_password }}" }
+  notify: Restart redis
+
 - name: Enable and start Redis service
   ansible.builtin.systemd:
     name: redis-server
-    enabled: true
     state: started
+    enabled: true

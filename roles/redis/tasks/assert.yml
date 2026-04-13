@@ -1,0 +1,7 @@
+---
+- name: Assert required role variables
+  ansible.builtin.assert:
+    that:
+      - redis_password is defined
+      - redis_password | length >= 12
+    fail_msg: "The variable 'redis_password' must be defined and at least 12 characters long."
