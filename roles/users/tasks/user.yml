@@ -4,7 +4,7 @@
     name: "{{ user.name }}"
     state: "{{ user.state | default('present') }}"
     comment: "{{ user.comment | default(omit) }}"
-    create_home: "{{ user.create_home | default(true) }}"
+    create_home: "{{ user.create_home | default(false) }}"
     password: "{{ user.password | default(omit) }}"
     password_lock: "{{ user.password_lock | default(omit) }}"
     uid: "{{ user.uid | default(omit) }}"
