@@ -5,6 +5,7 @@
       - docker.io
       - docker-compose
       - docker-buildx
+      - docker-cli
       - docker-doc
       - podman-docker
       - containerd
@@ -22,7 +23,7 @@
     signed_by: https://download.docker.com/linux/debian/gpg
     install_python_debian: true
     state: present
-  notify: Apt update
+  register: _docker_repo_result
 
 - name: Install Docker packages
   ansible.builtin.apt:
@@ -32,4 +33,5 @@
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
+    update_cache: "{{ _docker_repo_result is changed }}"
     state: present

@@ -3,6 +3,7 @@
   ansible.builtin.apt:
     name:
       - uidmap
+      - dbus-user-session
     state: present
 
 - name: Disable root Docker services
@@ -13,19 +14,34 @@
   loop:
     - docker.service
     - docker.socket
+  when: not ansible_check_mode
 
 - name: Remove root Docker socket
   ansible.builtin.file:
     path: /var/run/docker.sock
     state: absent
 
+- name: Install pasta for rootless Docker networking
+  ansible.builtin.apt:
+    name: passt
+    state: present
+  when: docker_rootless_network_driver == "pasta"
+
+- name: Install slirp4netns for rootless Docker networking
+  ansible.builtin.apt:
+    name: slirp4netns
+    state: present
+  when: docker_rootless_network_driver == "slirp4netns"
+
 - name: Install rootless Docker dependencies
   ansible.builtin.apt:
-    name:
-      - dbus-user-session
-      - rootlesskit
-      - slirp4netns
-      - fuse-overlayfs
+    name: docker-ce-rootless-extras
+    state: present
+  when: docker_install_source == 'docker-ce'
+
+- name: Install rootless Docker dependencies
+  ansible.builtin.apt:
+    name: rootlesskit
     state: present
   when: docker_install_source == 'distro'
 
@@ -42,6 +58,6 @@
     name: net.ipv4.ip_unprivileged_port_start
     value: "{{ docker_unprivileged_port_start }}"
     state: present
-    sysctl_file: /etc/sysctl.conf
+    sysctl_set: true
     reload: true
   when: docker_unprivileged_port_start is defined and docker_unprivileged_port_start > 0

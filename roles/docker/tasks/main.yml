@@ -27,6 +27,19 @@
   loop: "{{ docker_users }}"
   when: docker_users | length > 0
 
+- name: Enable IPv6 forwarding (sysctl)
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: "1"
+    state: present
+    sysctl_set: true
+    reload: true
+  when: docker_ipv6
+
+- name: Configure ipv6 for Docker
+  ansible.builtin.import_tasks: ipv6.yml
+  when: docker_ipv6 and not docker_rootless
+
 - name: Install rootless Docker prerequisites
   ansible.builtin.import_tasks: rootless-prerequisites.yml
   when: docker_rootless
@@ -38,3 +51,6 @@
 - name: Install simple Docker CLI
   ansible.builtin.import_tasks: simple.yml
   when: docker_simple_cli
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

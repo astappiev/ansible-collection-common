@@ -9,6 +9,14 @@
     state: restarted
   when: not docker_rootless and not ansible_check_mode
 
+- name: User daemon reload
+  become: true
+  become_user: "{{ item }}"
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: user
+  loop: "{{ docker_rootless_users }}"
+
 - name: User docker restart
   become: true
   become_user: "{{ item }}"
@@ -18,11 +26,3 @@
     scope: user
   loop: "{{ docker_rootless_users }}"
   when: docker_rootless and not ansible_check_mode
-
-- name: User daemon reload
-  become: true
-  become_user: "{{ item }}"
-  ansible.builtin.systemd:
-    daemon_reload: true
-    scope: user
-  loop: "{{ docker_rootless_users }}"

@@ -9,26 +9,17 @@
     create: true
     owner: "{{ user }}"
     group: "{{ user }}"
-    mode: '0600'
-
-- name: Check if rootless Docker service is running
-  ansible.builtin.systemd:
-    name: docker
-    scope: user
-  register: _docker_service_status
-  changed_when: false
-  failed_when: false
+    mode: "0600"
 
 - name: Install rootless Docker
-  ansible.builtin.shell: export PATH=/usr/share/docker.io/contrib:$PATH && dockerd-rootless-setuptool.sh install
-  register: _rootless_install
-  changed_when:
-    - _rootless_install.rc == 0
-    - "'Installed' in _rootless_install.stdout"
-  failed_when:
-    - _rootless_install.rc != 0
-  when:
-    - (_docker_service_status.status | default({})).ActiveState | default('inactive') != 'active'
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.shell: >
+    export XDG_RUNTIME_DIR=/run/user/$(id -u) &&
+    export PATH=/usr/share/docker.io/contrib:$PATH &&
+    dockerd-rootless-setuptool.sh install
+  args:
+    creates: "/home/{{ user }}/.config/systemd/user/docker.service"
 
 - name: Create systemd user directory for Docker
   ansible.builtin.file:
@@ -36,7 +27,7 @@
     state: directory
     owner: "{{ user }}"
     group: "{{ user }}"
-    mode: '0700'
+    mode: "0700"
 
 - name: Configure rootless Docker service
   ansible.builtin.copy:
@@ -44,14 +35,43 @@
       # Ansible managed
 
       [Service]
+      {% if docker_rootless_network_driver == "pasta" %}
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_NET=pasta"
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=implicit"
+      {% elif docker_rootless_network_driver == "slirp4netns" %}
       Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=slirp4netns"
-      # Alternative, if you need IPv6 support (apt install passt)
-      # Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_NET=pasta"
-      # Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=implicit"
+      {% endif %}
+
+      {% if docker_ipv6 %}
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS=--ipv6"
+      {% endif %}
     dest: "/home/{{ user }}/.config/systemd/user/docker.service.d/override.conf"
     owner: "{{ user }}"
     group: "{{ user }}"
-    mode: '0600'
+    mode: "0600"
   notify:
     - User daemon reload
     - User docker restart
+
+- name: Ensure Docker config dir exists
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.config/docker"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"
+  when: docker_ipv6
+
+- name: Configure Docker daemon (daemon.json)
+  ansible.builtin.copy:
+    dest: "/home/{{ user }}/.config/docker/daemon.json"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0644"
+    content: |
+      {
+        "ipv6": true,
+        "fixed-cidr-v6": "{{ docker_ipv6_default_subnet | ansible.utils.ipsubnet(docker_ipv6_rootless_subnet_size, ansible_loop.index0) }}"
+      }
+  when: docker_ipv6
+  notify: User docker restart

@@ -1,19 +1,10 @@
 ---
-- name: Check if lingering is enabled for rootless users
-  ansible.builtin.stat:
-    path: "/var/lib/systemd/linger/{{ item }}"
-  loop: "{{ docker_rootless_users }}"
-  register: _linger_status
-
 - name: Enable lingering for rootless users
-  ansible.builtin.command:
-    cmd: loginctl enable-linger {{ item.item }}
-  loop: "{{ _linger_status.results }}"
-  when:
-    - not item.stat.exists
-  register: _enable_linger
-  changed_when: _enable_linger.rc == 0
-  failed_when: _enable_linger.rc != 0
+  ansible.builtin.command: >
+    loginctl enable-linger {{ item }}
+  args:
+    creates: "/var/lib/systemd/linger/{{ item }}"
+  loop: "{{ docker_rootless_users }}"
 
 - name: Perform per-user rootless Docker setup
   ansible.builtin.include_tasks:
@@ -25,3 +16,4 @@
   loop_control:
     label: "{{ user }}"
     loop_var: user
+    extended: true

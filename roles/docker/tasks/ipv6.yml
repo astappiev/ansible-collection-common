@@ -1,0 +1,21 @@
+---
+- name: Ensure /etc/docker directory exists
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure root Docker daemon (daemon.json)
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      {
+        "ipv6": true,
+        "fixed-cidr-v6": "{{ docker_ipv6_default_subnet }}"
+      }
+  notify: Restart docker

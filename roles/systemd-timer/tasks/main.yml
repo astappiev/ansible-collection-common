@@ -27,3 +27,4 @@
     masked: false
     scope: "{{ systemd_scope }}"
   become: true
+  when: not ansible_check_mode

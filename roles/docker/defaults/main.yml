@@ -17,5 +17,17 @@ docker_rootless: false
 # List of users for which to set up rootless Docker (only applicable if docker_rootless is true)
 docker_rootless_users: []
 
+# Rootless Docker network driver to use: pasta or slirp4netns (only applicable if docker_rootless is true).
+docker_rootless_network_driver: "pasta"
+
+# Whether to enable IPv6 networking in Docker
+docker_ipv6: true
+
+# The default IPv6 subnet to use for Docker containers (only applicable if docker_ipv6 is true)
+docker_ipv6_default_subnet: "fd0d:d0d0::/48"
+
+# The subnet size to use for rootless Docker networks (only applicable if docker_rootless is true)
+docker_ipv6_rootless_subnet_size: 64
+
 # If you want to change the default unprivileged port start for rootless Docker
 # docker_unprivileged_port_start: 80
