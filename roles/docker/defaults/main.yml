@@ -5,7 +5,7 @@
 # - 'docker-ce' - Install from docker.com official repository (recommended for latest features)
 docker_install_source: distro
 
-# Users to add to the docker group (allows running docker without sudo)
+# Users to add to the docker group, or rootless Docker users if docker_rootless is true
 docker_users: []
 
 # Whether to install simple Docker CLI scripts and add aliases
@@ -13,9 +13,6 @@ docker_simple_cli: true
 
 # Whether to set up Docker for rootless mode (allows running docker without sudo)
 docker_rootless: false
-
-# List of users for which to set up rootless Docker (only applicable if docker_rootless is true)
-docker_rootless_users: []
 
 # Rootless Docker network driver to use: pasta or slirp4netns (only applicable if docker_rootless is true).
 docker_rootless_network_driver: "pasta"

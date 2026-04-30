@@ -22,15 +22,3 @@
       - docker_simple_cli is boolean
     fail_msg: "docker_simple_cli must be a boolean value"
     quiet: true
-
-- name: Validate docker_rootless_users when rootless is enabled
-  ansible.builtin.assert:
-    that:
-      - docker_rootless_users is defined
-      - docker_rootless_users is iterable
-      - docker_rootless_users | length > 0
-    fail_msg: >
-      docker_rootless_users must be a non-empty list when docker_rootless is true,
-      got: "{{ docker_rootless_users | default('undefined') }}"
-    quiet: true
-  when: docker_rootless | bool

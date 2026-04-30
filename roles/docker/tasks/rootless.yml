@@ -4,7 +4,7 @@
     loginctl enable-linger {{ item }}
   args:
     creates: "/var/lib/systemd/linger/{{ item }}"
-  loop: "{{ docker_rootless_users }}"
+  loop: "{{ docker_users }}"
 
 - name: Perform per-user rootless Docker setup
   ansible.builtin.include_tasks:
@@ -12,7 +12,7 @@
     apply:
       become: true
       become_user: "{{ user }}"
-  loop: "{{ docker_rootless_users }}"
+  loop: "{{ docker_users }}"
   loop_control:
     label: "{{ user }}"
     loop_var: user

@@ -25,7 +25,9 @@
     groups: docker
     append: true
   loop: "{{ docker_users }}"
-  when: docker_users | length > 0
+  when:
+    - docker_users | length > 0
+    - not docker_rootless
 
 - name: Enable IPv6 forwarding (sysctl)
   ansible.posix.sysctl:
