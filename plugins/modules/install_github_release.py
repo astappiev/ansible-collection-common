@@ -296,10 +296,13 @@ def set_mode_owner_group(module: AnsibleModule, path: str, mode, owner, group):
             set_mode_owner_group(module, os.path.join(path, item), mode, owner, group)
 
 
-def download_asset(module: AnsibleModule, *, file_name: str, url: str, move_rules: List[dict], archive_format: str):
+def download_asset(module: AnsibleModule, *, file_name: str, url: str, move_rules: List[dict], archive_format: str, local_file_path: str = None):
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, file_name)
-        urllib.request.urlretrieve(url, file_path)
+        if local_file_path:
+            shutil.copy(local_file_path, file_path)
+        else:
+            urllib.request.urlretrieve(url, file_path)
 
         file_path = decompress_file(file_path)
 
@@ -438,6 +441,9 @@ def main():
             "version_file": {"required": False, "type": "path"},
             # 5. after download, move files/dirs to destinations
             "move_rules": {"required": True, "type": "list", "elements": "dict"},
+            "github_release_info": {"required": False, "type": "dict"},
+            "local_archive_path": {"required": False, "type": "path"},
+            "action_step": {"required": False, "type": "str"},
         },
         supports_check_mode=True,
         mutually_exclusive=(
@@ -457,6 +463,12 @@ def main():
     version_regex = module.params["version_regex"] or r"\d+\.\d+(?:\.\d+)?"
     version_file = module.params["version_file"]
     move_rules: List[dict] = module.params["move_rules"]
+    github_release_info = module.params.get("github_release_info")
+    local_archive_path = module.params.get("local_archive_path")
+    action_step = module.params.get("action_step")
+    github_release_info = module.params.get("github_release_info")
+    local_archive_path = module.params.get("local_archive_path")
+    action_step = module.params.get("action_step")
 
     if not re.match(r"[\w\-_]+/[\w\-_]+", repo):
         module.fail_json(msg="Invalid repo")
@@ -489,14 +501,17 @@ def main():
         # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
         release_info_url = f"/repos/{repo}/releases/tags/{tag}"
 
-    release_info = get_json_url(f"https://api.github.com{release_info_url}")
+    if github_release_info:
+        release_info = github_release_info
+    else:
+        release_info = get_json_url(f"https://api.github.com{release_info_url}")
     version_latest = get_version_latest(module, version_regex, version_file, release_info)
     if version_installed is not None and version_installed == version_latest:
         module.exit_json(changed=False, msg="version match", version=version_latest)
 
     version_diff = dict(before=str(version_installed) + "\n", after=str(version_latest) + "\n")
 
-    if module.check_mode:
+    if module.check_mode and not action_step:
         module.exit_json(changed=True, diff=version_diff, version=version_latest)
 
     try:
@@ -505,12 +520,26 @@ def main():
         module.fail_json(msg=str(e))
         return
 
+    if action_step == "check":
+        module.exit_json(
+            changed=False,
+            needs_install=True,
+            version=version_latest,
+            diff=version_diff,
+            selected_asset={
+                "name": asset["name"],
+                "url": asset["browser_download_url"],
+                "archive_format": asset_archive_format
+            }
+        )
+
     changed = download_asset(
         module,
         file_name=asset["name"],
         url=asset["browser_download_url"],
         move_rules=move_rules,
         archive_format=asset_archive_format,
+        local_file_path=local_archive_path,
     )
 
     if version_file:
