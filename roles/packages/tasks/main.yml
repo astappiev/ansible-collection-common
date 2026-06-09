@@ -7,7 +7,7 @@
     cache_valid_time: 3600
   when:
     - packages_list | length > 0
-    - ansible_pkg_mgr == 'apt'
+    - ansible_facts["pkg_mgr"] == 'apt'
 
 - name: Install packages (generic)
   ansible.builtin.package:
@@ -15,4 +15,4 @@
     state: "{{ packages_state }}"
   when:
     - packages_list | length > 0
-    - ansible_pkg_mgr != 'apt'
+    - ansible_facts["pkg_mgr"] != 'apt'

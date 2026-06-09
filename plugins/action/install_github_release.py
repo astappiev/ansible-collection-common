@@ -4,9 +4,10 @@ __metaclass__ = type
 import os
 import json
 import time
-import urllib.request
+import shutil
 from ansible.plugins.action import ActionBase
 from ansible.errors import AnsibleError
+from ansible.module_utils.urls import open_url
 
 class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
@@ -46,12 +47,13 @@ class ActionModule(ActionBase):
             else:
                 url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
             
+            headers = {}
+            if "GITHUB_TOKEN" in os.environ:
+                headers["Authorization"] = "token " + os.environ["GITHUB_TOKEN"]
+            
             try:
-                req = urllib.request.Request(url)
-                if "GITHUB_TOKEN" in os.environ:
-                    req.add_header("Authorization", "token " + os.environ["GITHUB_TOKEN"])
-                with urllib.request.urlopen(req) as response:
-                    release_info = json.loads(response.read().decode('utf-8'))
+                response = open_url(url, headers=headers)
+                release_info = json.loads(response.read().decode('utf-8'))
                 with open(release_cache_file, "w") as f:
                     json.dump(release_info, f)
             except Exception as e:
@@ -69,8 +71,9 @@ class ActionModule(ActionBase):
         )
         
         if check_result.get("failed"):
+            check_result.update({"failed": True, "msg": f"Module failed in check mode: {check_result.get('msg', 'no message')}", "check_result": check_result})
             return check_result
-            
+
         if not check_result.get("needs_install"):
             return check_result
             
@@ -80,40 +83,44 @@ class ActionModule(ActionBase):
         # Installation is needed
         selected_asset = check_result.get("selected_asset")
         if not selected_asset:
-            return {"failed": True, "msg": "Module requested install but did not provide selected_asset."}
+            return {"failed": True, "msg": f"Module requested install but did not provide selected_asset. check_result: {str(check_result)}"}
             
         asset_url = selected_asset["url"]
         asset_name = selected_asset["name"]
-        
+
         # Download asset to control node cache
-        asset_cache_file = os.path.join(cache_dir, f"asset_{repo.replace('/', '_')}_{asset_name}")
-        
+        repo_clean = repo.replace('/', '_')
+        asset_cache_file = os.path.join(cache_dir, f"asset_{repo_clean}_{asset_name}")
+
         # Cache the downloaded binary for 3 days (259200 seconds)
         if not os.path.exists(asset_cache_file) or (time.time() - os.path.getmtime(asset_cache_file)) > 259200:
             try:
-                urllib.request.urlretrieve(asset_url, asset_cache_file)
+                # Use a temporary file for download to avoid partial files on failure
+                temp_asset_path = asset_cache_file + ".tmp"
+                headers = {}
+                if "GITHUB_TOKEN" in os.environ:
+                    headers["Authorization"] = "token " + os.environ["GITHUB_TOKEN"]
+                
+                response = open_url(asset_url, headers=headers)
+                with open(temp_asset_path, "wb") as f:
+                    shutil.copyfileobj(response, f)
+                os.rename(temp_asset_path, asset_cache_file)
             except Exception as e:
-                return {"failed": True, "msg": f"Failed to download asset {asset_url}: {str(e)}"}
-        
+                return {"failed": True, "msg": f"Failed to download asset {asset_url} to {asset_cache_file}: {str(e)}"}
+
+        # Ensure the file exists before proceeding
+        if not os.path.exists(asset_cache_file):
+            return {"failed": True, "msg": f"Asset file {asset_cache_file} disappeared after download or was never created."}
+
         # Transfer the asset to the remote node
-        remote_tmp_dir = self._connection._shell.tmpdir or self._connection._shell.get_remote_filename(self._connection.get_option('remote_tmp'))
-        remote_tmp_file = self._connection._shell.join_path(remote_tmp_dir, asset_name)
-        
-        # We can use transfer_file or execute `copy` module
-        # let's use the builtin copy module for simplicity and reliability
-        copy_args = {
-            "src": asset_cache_file,
-            "dest": remote_tmp_file,
-            "mode": "0600"
-        }
-        copy_result = self._execute_module(
-            module_name="ansible.builtin.copy", 
-            module_args=copy_args, 
-            task_vars=task_vars
-        )
-        
-        if copy_result.get("failed"):
-            return copy_result
+        remote_tmp = self._make_tmp_path()
+        remote_tmp_file = self._connection._shell.join_path(remote_tmp, asset_name)
+
+        try:
+            self._transfer_file(asset_cache_file, remote_tmp_file)
+            self._fixup_perms2((remote_tmp, remote_tmp_file))
+        except Exception as e:
+            return {"failed": True, "msg": f"Failed to transfer asset to remote node: {str(e)}"}
             
         # Run module in 'install' mode
         install_args = module_args.copy()
@@ -127,10 +134,10 @@ class ActionModule(ActionBase):
             task_vars=task_vars
         )
         
-        # Cleanup remote tmp file
+        # Cleanup remote tmp directory
         self._execute_module(
             module_name='ansible.builtin.file',
-            module_args={'path': remote_tmp_file, 'state': 'absent'},
+            module_args={'path': remote_tmp, 'state': 'absent'},
             task_vars=task_vars
         )
         

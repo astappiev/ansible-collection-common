@@ -5,8 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import re
-import urllib.request
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.urls import open_url
 import json
 import tempfile
 import shutil
@@ -65,7 +65,7 @@ options:
     description:
       - If the asset is an archive, you can specify the archive format for unpacking.
         The format should be one of the formats supported by Python's `shutil.unpack_archive()`
-        function: `zip`, `tar`, `gztar`, `bztar`, or `xztar`.
+        such as `zip`, `tar`, `gztar`, `bztar`, or `xztar`.
         If not provided, the module will use the filename extension to guess the format.
     required: false
     type: str
@@ -74,7 +74,7 @@ options:
     description:
       - If the repo uses non-standard strings to specify CPU architecture, you can define a custom
         mapping between those and standard architectures. For example, if some repo uses `64` instead
-        of `x86_64` or `amd64`, you can set this option to `amd64: "64"` or `x86_64: "64"`.
+        of `x86_64` or `amd64`, you can set this option to map `amd64` to `64` or `x86_64` to `64`.
     required: false
     type: dict
 
@@ -170,18 +170,17 @@ EXAMPLES = r"""
 
 
 def get_json_url(url: str) -> dict:
-    req = urllib.request.Request(url)
+    headers = {}
     if "GITHUB_TOKEN" in os.environ:
-        token = os.environ["GITHUB_TOKEN"]
-        req.add_header("Authorization", "token " + token)
+        headers["Authorization"] = "token " + os.environ["GITHUB_TOKEN"]
 
-    with urllib.request.urlopen(req) as body:
-        return json.load(body)
+    response = open_url(url, headers=headers)
+    return json.loads(response.read().decode('utf-8'))
 
 
 def files_have_same_content(path1: str, path2: str):
     if not os.path.isfile(path1) or not os.path.isfile(path2):
-        raise Exception
+        raise FileNotFoundError(f"Cannot compare: {path1} or {path2} is not a file.")
     return filecmp.cmp(path1, path2)
 
 
@@ -297,12 +296,17 @@ def set_mode_owner_group(module: AnsibleModule, path: str, mode, owner, group):
 
 
 def download_asset(module: AnsibleModule, *, file_name: str, url: str, move_rules: List[dict], archive_format: str, local_file_path: str = None):
-    with tempfile.TemporaryDirectory() as temp_dir:
+    with tempfile.TemporaryDirectory(dir=module.tmpdir) as temp_dir:
         file_path = os.path.join(temp_dir, file_name)
         if local_file_path:
             shutil.copy(local_file_path, file_path)
         else:
-            urllib.request.urlretrieve(url, file_path)
+            headers = {}
+            if "GITHUB_TOKEN" in os.environ:
+                headers["Authorization"] = "token " + os.environ["GITHUB_TOKEN"]
+            response = open_url(url, headers=headers)
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(response, f)
 
         file_path = decompress_file(file_path)
 
