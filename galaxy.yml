@@ -20,8 +20,8 @@ tags:
   - infrastructure
 
 dependencies:
-  community.general: ">=3.0.0"
-  community.mysql: ">=4.0.0"
+  community.general: ">=13.0.1"
+  ansible.mysql: ">=5.0.1"
 
 repository: https://github.com/astappiev/ansible-collection-common
 documentation: https://github.com/astappiev/ansible-collection-common

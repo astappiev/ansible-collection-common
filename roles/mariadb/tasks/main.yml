@@ -3,7 +3,7 @@
   ansible.builtin.package:
     name:
       - mariadb-server
-      - python3-pymysql # Required for community.mysql.mysql_query module
+      - python3-pymysql # Required for ansible.mysql.mysql_query module
     state: present
 
 - name: Configure MariaDB datadir
@@ -36,7 +36,7 @@
   when: not ansible_check_mode
 
 - name: Create databases
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     name: "{{ item.name }}"
     state: "{{ item.state | default('present') }}"
     target: "{{ item.target | default(omit) }}"
@@ -50,7 +50,7 @@
   no_log: true
 
 - name: Create users
-  community.mysql.mysql_user:
+  ansible.mysql.mysql_user:
     name: "{{ item.name }}"
     state: present
     password: "{{ item.password | default(omit) }}"
@@ -66,14 +66,14 @@
     - mariadb_users is defined
 
 - name: List databases
-  community.mysql.mysql_info:
+  ansible.mysql.mysql_info:
     login_unix_socket: "{{ mariadb_unix_socket }}"
     filter: databases
   register: mariadb_info
   no_log: true
 
 - name: Secure MariaDB installation
-  community.mysql.mysql_query:
+  ansible.mysql.mysql_query:
     login_unix_socket: "{{ mariadb_unix_socket }}"
     query:
       - "DELETE FROM mysql.user WHERE User='';"
