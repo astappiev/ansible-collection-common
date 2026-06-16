@@ -1,4 +1,24 @@
 ---
+- name: Ensure subuid entry for rootless Docker
+  ansible.builtin.lineinfile:
+    path: /etc/subuid
+    line: "{{ item }}:{{ 100000 + ansible_loop.index0 * 65536 }}:65536"
+    create: true
+    mode: "0644"
+  loop: "{{ docker_users }}"
+  loop_control:
+    extended: true
+
+- name: Ensure subgid entry for rootless Docker
+  ansible.builtin.lineinfile:
+    path: /etc/subgid
+    line: "{{ item }}:{{ 100000 + ansible_loop.index0 * 65536 }}:65536"
+    create: true
+    mode: "0644"
+  loop: "{{ docker_users }}"
+  loop_control:
+    extended: true
+
 - name: Enable lingering for rootless users
   ansible.builtin.command: >
     loginctl enable-linger {{ item }}

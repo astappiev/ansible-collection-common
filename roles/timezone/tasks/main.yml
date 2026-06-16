@@ -1,9 +1,7 @@
 ---
 - name: Install timezone information
   ansible.builtin.package:
-    name:
-      - tzdata
-      - util-linux-extra # hwclock command is required for community.general.timezone to work properly
+    name: "{{ timezone_packages }}"
     state: present
 
 - name: Set timezone

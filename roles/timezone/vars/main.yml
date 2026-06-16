@@ -1,0 +1,10 @@
+---
+_timezone_packages:
+  default:
+    - tzdata
+    - util-linux-extra # hwclock command is required for community.general.timezone to work properly
+
+  RedHat:
+    - tzdata
+
+timezone_packages: "{{ _timezone_packages[ansible_facts['os_family']] | default(_timezone_packages['default']) }}"
