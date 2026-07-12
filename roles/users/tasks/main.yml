@@ -20,10 +20,3 @@
   when:
     - users_list is defined
     - users_list | length > 0
-
-- name: Ensure the /etc/sudoers.d directory is included
-  ansible.builtin.lineinfile:
-    path: /etc/sudoers
-    line: "@includedir /etc/sudoers.d"
-    regexp: "^(@|#)includedir"
-    validate: "visudo --check --file %s"
