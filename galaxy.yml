@@ -2,7 +2,7 @@
 namespace: astappiev
 name: common
 description: Essential Linux roles for most common tasks.
-version: 1.2.0
+version: 1.5.0
 
 readme: README.md
 
@@ -20,8 +20,10 @@ tags:
   - infrastructure
 
 dependencies:
+  ansible.mysql: ">=5.1.0"
+  ansible.posix: ">=2.0.0"
+  ansible.utils: ">=6.0.0"
   community.general: ">=13.0.1"
-  ansible.mysql: ">=5.0.1"
 
 repository: https://github.com/astappiev/ansible-collection-common
 documentation: https://github.com/astappiev/ansible-collection-common

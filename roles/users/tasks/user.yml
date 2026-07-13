@@ -19,7 +19,7 @@
     ssh_key_passphrase: "{{ user.ssh_key_passphrase | default(omit) }}"
     ssh_key_type: "{{ user.ssh_key_type | default('ed25519' if user.generate_ssh_key | default(false) else omit) }}"
     ssh_key_comment: >-
-      {{ user.ssh_key_comment | default(user.name + '@' + common_hostname | default(ansible_facts["fqdn"]))
+      {{ user.ssh_key_comment | default(user.name + '@' + hostname | default(ansible_facts["fqdn"]))
       if user.generate_ssh_key | default(false) else omit }}
   register: users_manage_user
 
