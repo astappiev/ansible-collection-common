@@ -1,0 +1,36 @@
+---
+argument_specs:
+  main:
+    short_description: Configure SSH daemon with security best practices
+    options:
+      sshd_port:
+        type: int
+        default: 22
+        description: SSH port number to configure. Must be between 1 and 65535 (checked in tasks/assert.yml).
+      sshd_authorized_keys:
+        type: list
+        elements: str
+        default: []
+        description: >-
+          List of authorized SSH keys for the root user.
+          Ignored when users_list['root'].authorized_keys is set.
+      sshd_remove_authorized_keys:
+        type: bool
+        default: true
+        description: Whether to remove authorized keys not in the sshd_authorized_keys list.
+      sshd_permit_root_login:
+        type: str
+        choices:
+          - "yes"
+          - "no"
+          - without-password
+          - prohibit-password
+          - forced-commands-only
+        description: >-
+          Whether to permit root login via SSH. Defaults to prohibit-password when
+          sshd_authorized_keys is non-empty, otherwise yes (see defaults/main.yml).
+      sshd_password_authentication:
+        type: bool
+        description: >-
+          Enable or disable password authentication via SSH.
+          Defaults to true when sshd_authorized_keys is empty (see defaults/main.yml).

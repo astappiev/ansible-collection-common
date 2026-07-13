@@ -1,0 +1,148 @@
+---
+argument_specs:
+  main:
+    short_description: Manage system users and groups
+    options:
+      users_list:
+        type: list
+        elements: dict
+        default: []
+        description: List of users to create.
+        options:
+          name:
+            type: str
+            required: true
+            description: Name of the user.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: Whether the user should exist.
+          comment:
+            type: str
+            required: false
+            description: The user's comment/description field (GECOS).
+          uid:
+            type: int
+            required: false
+            description: The numeric user ID.
+          group:
+            type: str
+            required: false
+            description: The user's primary group.
+          groups:
+            type: list
+            elements: str
+            default: []
+            description: Additional groups the user should belong to.
+          home:
+            type: str
+            required: false
+            description: The user's home directory path.
+          create_home:
+            type: bool
+            default: false
+            description: Whether to create the user's home directory.
+          shell:
+            type: str
+            default: /bin/bash
+            description: The user's login shell.
+          password:
+            type: str
+            required: false
+            no_log: true
+            description: >-
+              Encrypted password for the user. Use ansible-vault or generate with:
+              mkpasswd --method=sha-512.
+          password_lock:
+            type: bool
+            required: false
+            description: Whether to lock the user's password.
+          password_validity_days:
+            type: int
+            required: false
+            description: Number of days after which the password expires (via chage -M).
+          update_password:
+            type: str
+            required: false
+            choices:
+              - always
+              - on_create
+            description: Whether to update the password always or only on creation.
+          expires:
+            type: float
+            required: false
+            description: An expiry time for the user, in epoch seconds.
+          system:
+            type: bool
+            required: false
+            description: Whether to create a system account.
+          generate_ssh_key:
+            type: bool
+            default: false
+            description: Whether to generate an SSH key for the user.
+          ssh_key_type:
+            type: str
+            default: ed25519
+            description: Type of the generated SSH key. Only used when generate_ssh_key is true.
+          ssh_key_passphrase:
+            type: str
+            required: false
+            no_log: true
+            description: Passphrase for the generated SSH key.
+          ssh_key_comment:
+            type: str
+            required: false
+            description: >-
+              Comment for the generated SSH key. Defaults to "<user>@<hostname>" when
+              generate_ssh_key is true.
+          authorized_keys:
+            type: list
+            elements: str
+            required: false
+            description: >-
+              List of public keys to authorize for the user (a single string is also accepted).
+          authorized_keys_exclusive:
+            type: bool
+            default: false
+            description: Whether authorized_keys should be the exclusive set of keys for the user.
+          sudo_options:
+            type: str
+            required: false
+            description: >-
+              Sudoers rule to grant the user, e.g. "ALL=(ALL) NOPASSWD: ALL". Removed when unset.
+      users_groups:
+        type: list
+        elements: dict
+        default: []
+        description: List of groups to create.
+        options:
+          name:
+            type: str
+            required: true
+            description: Name of the group.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: Whether the group should exist.
+          gid:
+            type: int
+            required: false
+            description: The numeric group ID.
+          system:
+            type: bool
+            required: false
+            description: Whether to create a system group.
+          sudo_options:
+            type: str
+            required: false
+            description: 'Sudoers rule to grant the group, e.g. "ALL=(ALL) NOPASSWD: ALL".'
+      users_pubkeys_dir:
+        type: str
+        default: "{{ inventory_dir }}/ssh_keys"
+        description: The local directory to store generated SSH public keys for users.

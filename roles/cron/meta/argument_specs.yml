@@ -1,0 +1,78 @@
+---
+argument_specs:
+  main:
+    short_description: Install and manage cron jobs
+    options:
+      cron_jobs:
+        type: list
+        elements: dict
+        default: []
+        description: List of cron jobs to manage.
+        options:
+          name:
+            type: str
+            required: true
+            description: Description of the cron job.
+          job:
+            type: str
+            required: true
+            description: The command to execute (or the value, when env is true).
+          minute:
+            type: str
+            default: "*"
+            description: Minute when the job should run.
+          hour:
+            type: str
+            default: "*"
+            description: Hour when the job should run.
+          day:
+            type: str
+            default: "*"
+            description: Day of month when the job should run.
+          month:
+            type: str
+            default: "*"
+            description: Month when the job should run.
+          weekday:
+            type: str
+            default: "*"
+            description: Day of week when the job should run.
+          user:
+            type: str
+            default: root
+            description: User to run the job as.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: Whether the cron job should be present or absent.
+          disabled:
+            type: bool
+            default: false
+            description: If true, comment out the cron job.
+          special_time:
+            type: str
+            required: false
+            choices:
+              - reboot
+              - hourly
+              - daily
+              - weekly
+              - monthly
+              - yearly
+              - annually
+            description: Special time specification.
+          cron_file:
+            type: str
+            required: false
+            description: If specified, use this file under /etc/cron.d/ instead of user crontab.
+          backup:
+            type: bool
+            default: false
+            description: If true, backup the crontab before modification.
+          env:
+            type: bool
+            default: false
+            description: If true, manage an environment variable instead of a job.

@@ -1,0 +1,79 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure MariaDB server
+    options:
+      mariadb_datadir:
+        type: str
+        required: false
+        description: Where to store the database files. Skipped when unset.
+      mariadb_bind_address:
+        type: str
+        required: false
+        description: >-
+          Bind address for the MariaDB server. Set to 0.0.0.0 to listen on all interfaces.
+          Skipped when unset.
+      mariadb_unix_socket:
+        type: str
+        default: /var/run/mysqld/mysqld.sock
+        description: Unix socket used by the Ansible modules to connect to the database server.
+      mariadb_databases:
+        type: list
+        elements: dict
+        default: []
+        description: List of databases to create.
+        options:
+          name:
+            type: str
+            required: true
+            description: Name of the database.
+          state:
+            type: str
+            default: present
+            description: State of the database.
+          target:
+            type: str
+            required: false
+            description: Path to a file used for import/dump operations.
+          encoding:
+            type: str
+            required: false
+            description: Encoding to use for the database.
+          collation:
+            type: str
+            required: false
+            description: Collation to use for the database.
+      mariadb_users:
+        type: list
+        elements: dict
+        default: []
+        description: List of users to create.
+        options:
+          name:
+            type: str
+            required: true
+            description: Name of the user.
+          password:
+            type: str
+            required: false
+            no_log: true
+            description: Password for the user.
+          priv:
+            type: str
+            required: false
+            description: 'Privileges to grant, e.g. "*.*:USAGE/db1.*:ALL".'
+          host:
+            type: str
+            required: false
+            description: Host the user is allowed to connect from.
+          host_all:
+            type: bool
+            required: false
+            description: Override host, applying the user's privileges to all hosts.
+          update_password:
+            type: str
+            required: false
+            choices:
+              - always
+              - on_create
+            description: Whether to update the password always or only on creation.

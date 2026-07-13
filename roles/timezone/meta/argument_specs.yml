@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Configure system timezone
+    options:
+      timezone:
+        type: str
+        default: Europe/Berlin
+        description: The timezone to set.

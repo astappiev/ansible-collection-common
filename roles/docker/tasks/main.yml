@@ -1,9 +1,4 @@
 ---
-- name: Validate variables
-  ansible.builtin.import_tasks: assert.yml
-  run_once: true
-  delegate_to: localhost
-
 - name: Install Docker from system packages
   ansible.builtin.import_tasks: install-system.yml
   when: docker_install_source == "distro"

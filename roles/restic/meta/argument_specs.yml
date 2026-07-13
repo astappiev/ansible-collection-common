@@ -1,0 +1,51 @@
+---
+argument_specs:
+  main:
+    short_description: Install restic and autorestic for backups
+    options:
+      restic_state:
+        type: str
+        default: latest
+        choices:
+          - present
+          - latest
+        description: >-
+          State of the restic package. Use "present" to install once, or "latest" to keep updated.
+      restic_binary_path:
+        type: str
+        default: /usr/local/bin/restic
+        description: The path where the restic binary will be installed.
+      autorestic_state:
+        type: str
+        default: latest
+        choices:
+          - present
+          - latest
+        description: >-
+          State of the autorestic package. Use "present" to install once, or "latest" to keep updated.
+      autorestic_binary_path:
+        type: str
+        default: /usr/local/bin/autorestic
+        description: The path where the autorestic binary will be installed.
+      autorestic_config_path:
+        type: str
+        default: /root/.autorestic.yml
+        description: The path where the autorestic configuration file will be created.
+      autorestic_cron:
+        type: bool
+        default: true
+        description: Whether to add a systemd timer for scheduled autorestic backups.
+      autorestic_locations:
+        type: dict
+        default: {}
+        description: >-
+          Backup locations to define, keyed by name. See
+          https://autorestic.vercel.app/location for the expected structure.
+      autorestic_backends:
+        type: dict
+        default: {}
+        no_log: true
+        description: >-
+          Backup backends/destinations to define, keyed by name. See
+          https://autorestic.vercel.app/backend for the expected structure.
+          May contain credentials in nested keys (e.g. env).

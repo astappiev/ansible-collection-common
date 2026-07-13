@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure Redis server
+    options:
+      redis_password:
+        type: str
+        required: true
+        no_log: true
+        description: >-
+          Password for Redis authentication. Must be defined in inventory, group_vars, or
+          host_vars, and at least 12 characters long (checked in tasks/assert.yml).

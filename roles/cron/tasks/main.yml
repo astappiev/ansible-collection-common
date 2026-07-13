@@ -4,11 +4,6 @@
     - cron_jobs is defined
     - cron_jobs | length > 0
   block:
-    - name: Include assert.yml
-      ansible.builtin.import_tasks: assert.yml
-      run_once: true
-      delegate_to: localhost
-
     - name: Install cron packages
       ansible.builtin.package:
         name: "{{ cron_packages }}"

@@ -1,0 +1,81 @@
+---
+argument_specs:
+  main:
+    short_description: Create systemd service/timer units for scheduled tasks
+    options:
+      systemd_base_path:
+        type: str
+        default: /etc/systemd/system
+        description: Base path where the systemd timer and service files are stored.
+      systemd_scope:
+        type: str
+        default: system
+        choices:
+          - system
+          - user
+        description: Systemd scope to manage the timer/service in.
+      systemd_timer_name:
+        type: str
+        required: true
+        description: Name of the systemd timer, used for the service and timer unit file names.
+      systemd_timer_envfile:
+        type: str
+        required: false
+        description: The environment file to use in the service unit.
+      systemd_timer_workingdir:
+        type: str
+        required: false
+        description: The working directory to use in the service unit.
+      systemd_timer_precommand:
+        type: str
+        required: false
+        description: A command to run before the main command execution.
+      systemd_timer_command:
+        type: str
+        required: true
+        description: Which command or script to execute.
+      systemd_timer_user:
+        type: str
+        default: root
+        description: User under which systemd_timer_command is executed.
+      systemd_timer_group:
+        type: str
+        default: root
+        description: Group under which systemd_timer_command is executed.
+      systemd_timer_on_calendar:
+        type: str
+        required: false
+        description: >-
+          Realtime (wallclock) timer expression, e.g. "*-*-* *:*:00" for every minute.
+      systemd_timer_accuracy_sec:
+        type: str
+        default: 15s
+        description: >-
+          Accuracy of the timer. Timers have a default accuracy of about one minute.
+      systemd_timer_persistent:
+        type: bool
+        default: false
+        description: >-
+          If true, the time when the service unit was last triggered is stored on disk, and the
+          service is triggered immediately on activation if it missed a run while inactive.
+          Only affects timers configured with systemd_timer_on_calendar.
+      systemd_timer_on_active_sec:
+        type: str
+        required: false
+        description: Relative time after the timer unit was last activated.
+      systemd_timer_on_boot_sec:
+        type: str
+        required: false
+        description: Relative time after the computer was booted.
+      systemd_timer_on_startup_sec:
+        type: str
+        required: false
+        description: Relative time after systemd was started.
+      systemd_timer_on_unit_active_sec:
+        type: str
+        required: false
+        description: Relative time after the service unit was last activated.
+      systemd_timer_on_unit_inactive_sec:
+        type: str
+        required: false
+        description: Relative time after the service unit was last deactivated.

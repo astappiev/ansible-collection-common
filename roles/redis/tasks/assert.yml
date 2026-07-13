@@ -1,7 +1,9 @@
 ---
-- name: Assert required role variables
+# Minimum-length check isn't expressible in meta/argument_specs.yml (which covers the
+# required/type/no_log validation for this role), so this is kept as a minimal residual assert.
+- name: Assert redis_password meets the minimum length
   ansible.builtin.assert:
     that:
-      - redis_password is defined
       - redis_password | length >= 12
-    fail_msg: "The variable 'redis_password' must be defined and at least 12 characters long."
+    fail_msg: "The variable 'redis_password' must be at least 12 characters long."
+    quiet: true

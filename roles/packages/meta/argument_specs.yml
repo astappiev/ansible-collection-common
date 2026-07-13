@@ -1,0 +1,18 @@
+---
+argument_specs:
+  main:
+    short_description: Install a list of system packages
+    options:
+      packages_list:
+        type: list
+        elements: str
+        default: []
+        description: List of packages to install.
+      packages_state:
+        type: str
+        default: present
+        choices:
+          - present
+          - latest
+          - absent
+        description: State of the packages.

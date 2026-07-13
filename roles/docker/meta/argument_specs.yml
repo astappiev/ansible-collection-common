@@ -1,0 +1,48 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure Docker Engine
+    options:
+      docker_install_source:
+        type: str
+        default: distro
+        choices:
+          - distro
+          - docker-ce
+        description: Install Docker from the system package manager or the docker.com repository.
+      docker_users:
+        type: list
+        elements: str
+        default: []
+        description: Users to add to the docker group, or rootless Docker users if docker_rootless is true.
+      docker_simple_cli:
+        type: bool
+        default: true
+        description: Whether to install simple Docker CLI scripts and add aliases.
+      docker_rootless:
+        type: bool
+        default: false
+        description: Whether to set up Docker for rootless mode.
+      docker_rootless_network_driver:
+        type: str
+        default: pasta
+        choices:
+          - pasta
+          - slirp4netns
+        description: Rootless Docker network driver to use. Only applicable if docker_rootless is true.
+      docker_ipv6:
+        type: bool
+        default: true
+        description: Whether to enable IPv6 networking in Docker.
+      docker_ipv6_default_subnet:
+        type: str
+        default: "fd0d:d0d0::/48"
+        description: The default IPv6 subnet to use for Docker containers. Only applicable if docker_ipv6 is true.
+      docker_ipv6_rootless_subnet_size:
+        type: int
+        default: 64
+        description: The subnet size to use for rootless Docker networks. Only applicable if docker_rootless is true.
+      docker_unprivileged_port_start:
+        type: int
+        required: false
+        description: Default unprivileged port start for rootless Docker.

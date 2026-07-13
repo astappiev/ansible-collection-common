@@ -1,0 +1,17 @@
+---
+argument_specs:
+  main:
+    short_description: Configure bashrc.d directory and enable drop-in shell scripts
+    options:
+      bashrc_dir:
+        type: str
+        default: /etc/bashrc.d
+        description: The directory to store additional bashrc drop-in scripts.
+      bashrc_global_path:
+        type: str
+        default: /etc/bash.bashrc
+        description: The global bashrc file path to hook bashrc_dir into.
+      bashrc_global_path_zsh:
+        type: str
+        default: /etc/zsh/zshrc
+        description: The global zshrc file path to hook bashrc_dir into.

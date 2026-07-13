@@ -1,0 +1,19 @@
+---
+argument_specs:
+  main:
+    short_description: Configure system hostname
+    options:
+      hostname:
+        type: str
+        default: "{{ inventory_hostname_short }}"
+        description: The hostname to set.
+      hostname_reboot:
+        type: bool
+        default: false
+        description: Whether the machine should be rebooted when the hostname is changed.
+      hostname_prompt_color:
+        type: str
+        required: false
+        description: >-
+          Color for the hostname in the bash/zsh prompt. Safe options: red, blue, green,
+          cyan, yellow, magenta, black, white. Skipped when unset.

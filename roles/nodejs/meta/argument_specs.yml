@@ -1,0 +1,30 @@
+---
+argument_specs:
+  main:
+    short_description: Install Node.js and enable package managers via Corepack
+    options:
+      nodejs_install_source:
+        type: str
+        default: distro
+        choices:
+          - distro
+          - nodesource
+        description: Install Node.js from the system package manager or the NodeSource repository.
+      nodejs_version:
+        type: str
+        default: "lts.x"
+        description: >-
+          Version of Node.js to install via NodeSource, e.g. "22.x", "24.x".
+          Only used if nodejs_install_source is set to "nodesource".
+      nodejs_corepack_enable:
+        type: list
+        elements: str
+        default: []
+        description: List of package managers to enable via Corepack.
+      nodejs_npm_global_packages:
+        type: list
+        elements: raw
+        default: []
+        description: >-
+          List of global packages to install with NPM. Each item can be a package name (string)
+          or an object with name, version, and state properties.

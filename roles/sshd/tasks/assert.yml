@@ -1,8 +1,9 @@
 ---
-- name: Assert sshd_port is a valid port number
+# Range checks aren't expressible in meta/argument_specs.yml (which covers the
+# type/choices validation for this role), so this is kept as a minimal residual assert.
+- name: Assert sshd_port is within the valid port range
   ansible.builtin.assert:
     that:
-      - sshd_port is number
       - sshd_port >= 1
       - sshd_port <= 65535
-    fail_msg: "sshd_port must be an integer between 1 and 65535"
+    fail_msg: "sshd_port must be between 1 and 65535, got '{{ sshd_port }}'"
