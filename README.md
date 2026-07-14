@@ -18,7 +18,7 @@ Only tested on Debian-based systems. Might work on others.
 - `redis` - Install and configure Redis server
 - `restic` - Install restic and autorestic for backups
 - `sshd` - Configure SSH daemon with security best practices
-- `systemd-timer` - Create systemd service/timer units for scheduled tasks
+- `systemd_timer` - Create systemd service/timer units for scheduled tasks
 - `timezone` - Configure system timezone
 - `users` - Manage system users and groups
 

@@ -33,7 +33,7 @@
 
 - name: Add autorestic systemd timer
   ansible.builtin.include_role:
-    name: systemd-timer
+    name: systemd_timer
   vars:
     systemd_timer_name: "autorestic"
     systemd_timer_command: "{{ autorestic_binary_path }} --restic-bin {{ restic_binary_path }} -c {{ autorestic_config_path }} --ci cron"
