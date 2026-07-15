@@ -13,9 +13,9 @@
     owner: root
     group: root
     mode: "0644"
-    content: |
-      {
-        "ipv6": true,
-        "fixed-cidr-v6": "{{ docker_ipv6_default_subnet }}"
-      }
+    content: >-
+      {{ (docker_daemon_options | default({}))
+      | combine({'ipv6': true, 'fixed-cidr-v6': docker_ipv6_default_subnet} if docker_ipv6 | bool else {})
+      | to_nice_json }}
   notify: Restart docker
+  when: docker_ipv6 | bool or (docker_daemon_options is defined and docker_daemon_options | length > 0)

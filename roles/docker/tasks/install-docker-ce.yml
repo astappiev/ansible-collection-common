@@ -16,11 +16,11 @@
 - name: Add Docker repository
   ansible.builtin.deb822_repository:
     name: docker
-    uris: https://download.docker.com/linux/debian
+    uris: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}"
     types: deb
     suites: "{{ ansible_facts['distribution_release'] }}"
     components: stable
-    signed_by: https://download.docker.com/linux/debian/gpg
+    signed_by: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
     install_python_debian: true
     state: present
   register: _docker_repo_result

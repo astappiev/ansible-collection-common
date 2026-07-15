@@ -12,8 +12,11 @@ EnvironmentFile={{ systemd_timer_envfile }}
 ExecStartPre={{ systemd_timer_precommand }}
 {% endif %}
 ExecStart={{ systemd_timer_command }}
-{% if systemd_timer_user is defined and (systemd_scope is not defined or systemd_scope != 'user') %}
+{% if systemd_timer_user is defined %}
 User={{ systemd_timer_user }}
+{% endif %}
+{% if systemd_timer_group is defined %}
+Group={{ systemd_timer_group }}
 {% endif %}
 {% if systemd_timer_workingdir is defined %}
 WorkingDirectory={{ systemd_timer_workingdir }}

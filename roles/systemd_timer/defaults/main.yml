@@ -1,9 +1,3 @@
-# Base path where to store the systemd timer and service files
-systemd_base_path: /etc/systemd/system
-
-# Define systemd scope: system or user
-systemd_scope: system
-
 # Define systemd timer name, it will be used fir the service and timer files names.
 # systemd_timer_name:
 

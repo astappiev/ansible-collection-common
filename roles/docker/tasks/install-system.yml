@@ -9,7 +9,12 @@
       - docker-compose-plugin
     state: absent
     purge: true
-  notify: Apt update
+
+- name: Remove Docker repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    state: absent
+  register: _docker_repo_removed
 
 - name: Install Docker packages from system repository
   ansible.builtin.apt:
@@ -18,4 +23,5 @@
       - docker-cli
       - docker-buildx
       - docker-compose
+    update_cache: "{{ _docker_repo_removed is changed }}"
     state: present

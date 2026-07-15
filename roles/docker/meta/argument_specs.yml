@@ -46,3 +46,7 @@ argument_specs:
         type: int
         required: false
         description: Default unprivileged port start for rootless Docker.
+      docker_daemon_options:
+        type: dict
+        default: {}
+        description: Custom daemon.json options for the root Docker daemon.

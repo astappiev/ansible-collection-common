@@ -3,17 +3,6 @@ argument_specs:
   main:
     short_description: Create systemd service/timer units for scheduled tasks
     options:
-      systemd_base_path:
-        type: str
-        default: /etc/systemd/system
-        description: Base path where the systemd timer and service files are stored.
-      systemd_scope:
-        type: str
-        default: system
-        choices:
-          - system
-          - user
-        description: Systemd scope to manage the timer/service in.
       systemd_timer_name:
         type: str
         required: true

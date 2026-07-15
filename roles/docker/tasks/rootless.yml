@@ -26,12 +26,21 @@
     creates: "/var/lib/systemd/linger/{{ item }}"
   loop: "{{ docker_users }}"
 
+- name: Get passwd entry for rootless users
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ item }}"
+  loop: "{{ docker_users }}"
+  when: docker_users | length > 0
+
 - name: Perform per-user rootless Docker setup
   ansible.builtin.include_tasks:
     file: rootless_unpriv.yml
     apply:
       become: true
       become_user: "{{ user }}"
+  vars:
+    user_home: "{{ ansible_facts.getent_passwd[user][4] | default('/home/' ~ user) }}"
   loop: "{{ docker_users }}"
   loop_control:
     label: "{{ user }}"

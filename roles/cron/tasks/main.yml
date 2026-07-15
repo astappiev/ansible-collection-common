@@ -17,8 +17,9 @@
 
     - name: Manage cron jobs
       ansible.builtin.cron:
-        name: "{{ item.name }}"
-        job: "{{ item.job }}"
+        env: "{{ true if item.env_var is defined else false }}"
+        name: "{{ item.env_var if item.env_var is defined else item.name }}"
+        job: "{{ item.env_value if item.env_var is defined else item.job }}"
         minute: "{{ item.minute | default('*') }}"
         hour: "{{ item.hour | default('*') }}"
         day: "{{ item.day | default('*') }}"
@@ -30,5 +31,4 @@
         special_time: "{{ item.special_time | default(omit) }}"
         cron_file: "{{ item.cron_file | default(omit) }}"
         backup: "{{ item.backup | default(false) }}"
-        env: "{{ item.env | default(false) }}"
       loop: "{{ cron_jobs }}"

@@ -15,8 +15,12 @@ autorestic_binary_path: /usr/local/bin/autorestic  # noqa: var-naming[no-role-pr
 # The path where the autorestic configuration file will be created.
 autorestic_config_path: /root/.autorestic.yml  # noqa: var-naming[no-role-prefix]
 
-# Whether to add autorestic to cron for scheduled backups.
-autorestic_cron: true  # noqa: var-naming[no-role-prefix]
+# Whether to add a systemd timer for scheduled autorestic backups.
+autorestic_timer: true  # noqa: var-naming[no-role-prefix]
+
+# The OnCalendar schedule for the autorestic systemd timer.
+# Default runs every 30 minutes. See systemd.time(7) for the syntax.
+autorestic_timer_on_calendar: "*:0/30"  # noqa: var-naming[no-role-prefix]
 
 # Define locations to backup.
 # https://autorestic.vercel.app/location

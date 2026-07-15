@@ -31,10 +31,16 @@ argument_specs:
         type: str
         default: /root/.autorestic.yml
         description: The path where the autorestic configuration file will be created.
-      autorestic_cron:
+      autorestic_timer:
         type: bool
         default: true
         description: Whether to add a systemd timer for scheduled autorestic backups.
+      autorestic_timer_on_calendar:
+        type: str
+        default: "*:0/30"
+        description: >-
+          The OnCalendar schedule for the autorestic systemd timer. Default runs every
+          30 minutes. See systemd.time(7) for the syntax.
       autorestic_locations:
         type: dict
         default: {}

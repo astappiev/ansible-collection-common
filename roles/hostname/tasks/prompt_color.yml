@@ -9,11 +9,9 @@
     mode: "0644"
 
 - name: Check if zsh is installed
-  ansible.builtin.command: "which zsh"
+  ansible.builtin.stat:
+    path: /usr/bin/zsh
   register: hostname_zsh_check
-  changed_when: false
-  failed_when: false
-  check_mode: false
 
 - name: Configure hostname color prompt (zsh)
   ansible.builtin.template:
@@ -22,4 +20,4 @@
     owner: root
     group: root
     mode: "0644"
-  when: hostname_zsh_check.rc == 0
+  when: hostname_zsh_check.stat.exists

@@ -7,7 +7,7 @@ __set_zshrc_color_prompt() {
     # Set prompt with color
     # %F{color} starts color, %f ends it.
     # %n is user, %m is hostname, %~ is cwd.
-    PROMPT='%F{ {{ hostname_prompt_color }} }%n@%m%f:%F{blue}%~%f$ '
+    PROMPT='%F{{ '{' }}{{ hostname_prompt_color }}{{ '}' }}%n@%m%f:%F{blue}%~%f$ '
     
     # Remove from precmd_functions to run only once
     precmd_functions=("${(@)precmd_functions:#__set_zshrc_color_prompt}")

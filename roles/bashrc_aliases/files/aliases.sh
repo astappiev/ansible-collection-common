@@ -14,7 +14,7 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 alias lt='ls --human-readable --size -1 -S --classify'
-alias gh='history | grep'
+alias hist='history | grep'
 
 # working with files
 alias count='find . -type f | wc -l'

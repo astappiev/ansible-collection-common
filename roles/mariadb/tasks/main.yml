@@ -47,12 +47,11 @@
   loop_control:
     label: "{{ item.name }}"
   when: mariadb_databases is defined
-  no_log: true
 
 - name: Create users
   ansible.mysql.mysql_user:
     name: "{{ item.name }}"
-    state: present
+    state: "{{ item.state | default('present') }}"
     password: "{{ item.password | default(omit) }}"
     priv: "{{ item.priv | default(omit) }}"
     host: "{{ item.host | default(omit) }}"
@@ -64,6 +63,7 @@
     label: "{{ item.name }}"
   when:
     - mariadb_users is defined
+  no_log: true
 
 - name: List databases
   ansible.mysql.mysql_info:

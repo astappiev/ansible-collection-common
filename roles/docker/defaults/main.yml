@@ -28,3 +28,6 @@ docker_ipv6_rootless_subnet_size: 64
 
 # If you want to change the default unprivileged port start for rootless Docker
 # docker_unprivileged_port_start: 80
+
+# Custom daemon.json options for the root Docker daemon
+docker_daemon_options: {}

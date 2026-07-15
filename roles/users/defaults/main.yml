@@ -1,6 +1,8 @@
 ---
 
 # List of users to create
+# Note: For user authorized keys, authorized_keys_exclusive defaults to false in tasks/user.yml
+# to prevent accidental lockout of users, whereas sshd's sshd_remove_authorized_keys defaults to true.
 # users_list:
 #   - name: exampleuser
 #     comment: "Example User"

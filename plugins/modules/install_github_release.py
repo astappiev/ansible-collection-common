@@ -1,24 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: Contributors to the Ansible project
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-import re
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.urls import open_url
-import json
-import tempfile
-import shutil
-import os
-from typing import Union, List
-import bz2
-import gzip
-import lzma
-import platform
-import filecmp
-from collections import defaultdict
-
 
 DOCUMENTATION = r"""
 module: install_github_release
@@ -28,8 +8,8 @@ description:
     select an asset from that release based on OS and CPU architecture,
     download the asset, and install files/directories from the asset.
 author:
-  - Mohammad Javad Naderi (https://github.com/QueraTeam/ansible-github)
-  - Oleh Astappiev
+  - Mohammad Javad Naderi (!UNKNOWN)
+  - Oleh Astappiev (@astappiev)
 options:
   repo:
     description:
@@ -49,6 +29,7 @@ options:
       - The expected state of the package.
         The default (`present`) means the package will not be updated automatically. If you need to update it, set to `latest`.
     default: present
+    choices: [present, latest]
     type: str
 
   asset_regex:
@@ -77,6 +58,7 @@ options:
         of `x86_64` or `amd64`, you can set this option to map `amd64` to `64` or `x86_64` to `64`.
     required: false
     type: dict
+    default: {}
 
   version_command:
     description:
@@ -89,10 +71,11 @@ options:
   version_regex:
     description:
       - A regex for extracting version from the output of `version_command` or tag name.
-        The default is to match 2 or 3 numbers joined by `.`. E.g. 1.12.7 or 1.12
+        If not set, it defaults to matching 2 or 3 numbers joined by `.` (e.g. 1.12.7 or 1.12).
+        Left undocumented as a spec default so it stays distinguishable from "not set" for the
+        mutual-exclusivity check with `version_file`.
     required: false
     type: str
-    default: \d+\.\d+(?:\.\d+)?
 
   version_file:
     description:
@@ -117,9 +100,59 @@ options:
         a rule to move that file (`src_regex` can be any regex mathing file name, e.g. `.*`).
     required: true
     type: list
+    elements: dict
+
+  github_release_info:
+    description:
+      - Internal option used by the C(astappiev.common.install_github_release) action plugin to pass
+        pre-fetched Github release JSON to the module, avoiding a redundant API call on every host.
+        Not meant to be set directly in a playbook.
+    required: false
+    type: dict
+
+  local_archive_path:
+    description:
+      - Internal option used by the C(astappiev.common.install_github_release) action plugin to pass
+        the path of an asset already downloaded/transferred to the target host, avoiding a redundant
+        download inside the module. Not meant to be set directly in a playbook.
+    required: false
+    type: path
+
+  action_step:
+    description:
+      - Internal option used by the C(astappiev.common.install_github_release) action plugin to run the
+        module in a specific step of its two-phase (check, then install) flow. Not meant to be set
+        directly in a playbook.
+    required: false
+    type: str
+    choices: [check, install]
 """
 
-RETURN = ""
+RETURN = r"""
+version:
+  description: The version that is (or would be) installed.
+  returned: always
+  type: str
+  sample: "1.12.7"
+changed:
+  description: Whether the target was installed or updated.
+  returned: always
+  type: bool
+diff:
+  description: Before/after version, for C(--diff) output.
+  returned: always
+  type: dict
+  sample: {"before": "1.12.6\n", "after": "1.12.7\n"}
+needs_install:
+  description: Whether an install/update is needed. Only returned by the action plugin's internal "check" step.
+  returned: when action_step is C(check)
+  type: bool
+selected_asset:
+  description: The Github release asset selected for installation. Only returned by the action plugin's internal "check" step.
+  returned: when action_step is C(check)
+  type: dict
+  sample: {"name": "tool-linux-amd64.tar.gz", "url": "https://github.com/.../tool-linux-amd64.tar.gz", "archive_format": null}
+"""
 
 EXAMPLES = r"""
 - name: install latest version of lego (ACME client)
@@ -167,6 +200,21 @@ EXAMPLES = r"""
       - src_regex: exampledata.dat
         dst: /usr/local/share/example
 """
+
+import re
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.urls import open_url
+import json
+import tempfile
+import shutil
+import os
+from typing import Union, List
+import bz2
+import gzip
+import lzma
+import platform
+import filecmp
+from collections import defaultdict
 
 
 def get_json_url(url: str) -> dict:
@@ -352,8 +400,12 @@ def download_asset(module: AnsibleModule, *, file_name: str, url: str, move_rule
 
 def is_target_exists(module: AnsibleModule, move_rules: List[dict]):
     for move_rule in move_rules:
+        dst = move_rule["dst"]
+        if os.path.isfile(dst):
+            # dst is a full file path (not a directory) - its existence is the target
+            continue
         filename_regex = move_rule["src_regex"].split("/")[-1]
-        if not is_exists_in_dir(move_rule["dst"], filename_regex):
+        if not is_exists_in_dir(dst, filename_regex):
             return False
     return True
 
@@ -434,20 +486,24 @@ def main():
             # 2. select release
             #   if tag is not provided, we get the latest release (the most recent non-prerelease, non-draft release)
             "tag": {"required": False, "type": "str", "default": "latest"},
-            "state": {"required": False, "type": "str", "default": "present"},  # can be either `present` or `latest` similarly to Ansible's `package` module
+            "state": {"required": False, "type": "str", "default": "present", "choices": ["present", "latest"]},
             # 3. select asset
             "asset_regex": {"required": True, "type": "str"},
             "asset_archive_format": {"required": False, "type": "str"},
             "asset_arch_mapping": {"required": False, "type": "dict", "default": {}},
             # 4. (optional) check installed version (to see if download is required)
             "version_command": {"required": False, "type": "str"},
+            # No `default` here on purpose: mutually_exclusive below checks whether the
+            # param was explicitly set (non-None). Giving it a default would make it
+            # always "set", breaking the version_file/version_regex exclusivity check.
+            # The actual default is applied in code, right after AnsibleModule() runs.
             "version_regex": {"required": False, "type": "str"},
             "version_file": {"required": False, "type": "path"},
             # 5. after download, move files/dirs to destinations
             "move_rules": {"required": True, "type": "list", "elements": "dict"},
             "github_release_info": {"required": False, "type": "dict"},
             "local_archive_path": {"required": False, "type": "path"},
-            "action_step": {"required": False, "type": "str"},
+            "action_step": {"required": False, "type": "str", "choices": ["check", "install"]},
         },
         supports_check_mode=True,
         mutually_exclusive=(
@@ -467,9 +523,6 @@ def main():
     version_regex = module.params["version_regex"] or r"\d+\.\d+(?:\.\d+)?"
     version_file = module.params["version_file"]
     move_rules: List[dict] = module.params["move_rules"]
-    github_release_info = module.params.get("github_release_info")
-    local_archive_path = module.params.get("local_archive_path")
-    action_step = module.params.get("action_step")
     github_release_info = module.params.get("github_release_info")
     local_archive_path = module.params.get("local_archive_path")
     action_step = module.params.get("action_step")

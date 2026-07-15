@@ -21,7 +21,7 @@ OnUnitInactiveSec={{ systemd_timer_on_unit_inactive_sec }}
 {% endif %}
 {% if systemd_timer_on_calendar is defined %}
 OnCalendar={{ systemd_timer_on_calendar }}
-Persistent={{ systemd_timer_persistent }}
+Persistent={{ systemd_timer_persistent | lower }}
 {% endif %}
 AccuracySec={{ systemd_timer_accuracy_sec }}
 

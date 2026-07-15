@@ -33,9 +33,9 @@
     reload: true
   when: docker_ipv6
 
-- name: Configure ipv6 for Docker
-  ansible.builtin.import_tasks: ipv6.yml
-  when: docker_ipv6 and not docker_rootless
+- name: Configure root Docker daemon
+  ansible.builtin.import_tasks: daemon.yml
+  when: not docker_rootless
 
 - name: Install rootless Docker prerequisites
   ansible.builtin.import_tasks: rootless-prerequisites.yml

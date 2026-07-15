@@ -1,6 +1,28 @@
 ---
 ancestor: null
 releases:
+  1.6.0:
+    release_date: '2026-07-15'
+    changes:
+      release_summary: Refactored role tasks, modernized configurations.
+      breaking_changes:
+        - systemd_timer: removed `systemd_scope` variable (was mostly unused and caused confusion)
+        - restic: replaced `autorestic_cron` with `autorestic_timer` (to show exactly what is being used)
+        - sshd: transitioned configuration from lineinfile to a drop-in file `00-ansible.conf` in `/etc/ssh/sshd_config.d/` (requires Include support in sshd_config)
+        - cron: replaced generic `env` boolean toggle with specific `env_var` and `env_value` attributes
+        - bashrc_aliases: renamed alias `gh` (history grep helper) to `hist` to avoid conflicts with GitHub CLI
+      minor_changes:
+        - install_github_release: action plugin now keys asset cache by tag name, cleans cache entries older than 30 days, and supports `dest` as a full file path
+        - docker: made `bashrc` dependency conditional on `docker_simple_cli`, dynamically resolves user home directories via getent database in rootless mode, and renamed ipv6.yml tasks to daemon.yml to configure daemon.json settings dynamically
+        - redis: added default `redis_bind` variable (default `"127.0.0.1 -::1"`) to prevent exposing redis interface by default
+        - mariadb: added support for configuring `state` on mariadb users, and added `no_log` to user creation task
+        - users: added `no_log` to user management task when password is defined
+        - restic: added `no_log` to autorestic configuration file copy task
+        - redis: added `no_log` to Set redis password task
+      bugfixes:
+        - users: fixed user password validity check failing when validity days is undefined
+        - hostname: modified prompt template to fix zsh escaping, and optimized zsh check using `stat` module
+        - nodejs: replaced with_items with loop syntax, optimized corepack execution using `creates` option
   1.5.0:
     release_date: '2026-02-12'
     changes:

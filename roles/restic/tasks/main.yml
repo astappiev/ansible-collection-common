@@ -28,8 +28,11 @@
     mode: '0600'
     owner: root
     group: root
+    # autorestic check may attempt to reach configured backends; on a host
+    # without network access to the backend this validation will fail.
     validate: "{{ autorestic_binary_path }} check -c %s"
   when: autorestic_locations | length > 0 and autorestic_backends | length > 0
+  no_log: true
 
 - name: Add autorestic systemd timer
   ansible.builtin.include_role:
@@ -37,5 +40,5 @@
   vars:
     systemd_timer_name: "autorestic"
     systemd_timer_command: "{{ autorestic_binary_path }} --restic-bin {{ restic_binary_path }} -c {{ autorestic_config_path }} --ci cron"
-    systemd_timer_on_calendar: "*:0/30"  # every 30 minutes
-  when: autorestic_cron | bool
+    systemd_timer_on_calendar: "{{ autorestic_timer_on_calendar }}"
+  when: autorestic_timer | bool

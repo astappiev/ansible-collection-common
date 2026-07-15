@@ -1,3 +1,6 @@
 ---
+# Bind address for the Redis server.
+redis_bind: "127.0.0.1 -::1"
+
 # This variable is required and must be defined in inventory, group_vars, or host_vars.
 # redis_password: ""

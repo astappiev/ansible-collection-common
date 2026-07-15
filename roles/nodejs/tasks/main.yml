@@ -10,12 +10,10 @@
 - name: Enable specified package managers via Corepack
   ansible.builtin.command:
     cmd: corepack enable "{{ item }}"
-  with_items: "{{ nodejs_corepack_enable }}"
+    creates: "/usr/local/bin/{{ item }}"
+  loop: "{{ nodejs_corepack_enable }}"
   when:
     - nodejs_corepack_enable | length > 0
-  changed_when: false
-  register: nodejs_corepack_result
-  failed_when: nodejs_corepack_result.rc != 0
 
 - name: Ensure npm global packages are installed
   community.general.npm:
@@ -23,5 +21,5 @@
     version: "{{ item.version | default(omit) }}"
     state: "{{ item.state | default('present') }}"
     global: true
-  with_items: "{{ nodejs_npm_global_packages }}"
+  loop: "{{ nodejs_npm_global_packages }}"
   when: nodejs_npm_global_packages | length > 0

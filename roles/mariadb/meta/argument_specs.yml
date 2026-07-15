@@ -53,6 +53,13 @@ argument_specs:
             type: str
             required: true
             description: Name of the user.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: State of the user.
           password:
             type: str
             required: false

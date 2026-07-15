@@ -1,7 +1,7 @@
 ---
 - name: Configure Docker environment
   ansible.builtin.blockinfile:
-    path: "/home/{{ user }}/.bashrc"
+    path: "{{ user_home }}/.bashrc"
     block: |
       export PATH=/usr/share/docker.io/contrib:$PATH
       export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
@@ -12,18 +12,16 @@
     mode: "0600"
 
 - name: Install rootless Docker
-  become: true
-  become_user: "{{ user }}"
   ansible.builtin.shell: >
     export XDG_RUNTIME_DIR=/run/user/$(id -u) &&
     export PATH=/usr/share/docker.io/contrib:$PATH &&
     dockerd-rootless-setuptool.sh install
   args:
-    creates: "/home/{{ user }}/.config/systemd/user/docker.service"
+    creates: "{{ user_home }}/.config/systemd/user/docker.service"
 
 - name: Create systemd user directory for Docker
   ansible.builtin.file:
-    path: "/home/{{ user }}/.config/systemd/user/docker.service.d"
+    path: "{{ user_home }}/.config/systemd/user/docker.service.d"
     state: directory
     owner: "{{ user }}"
     group: "{{ user }}"
@@ -45,7 +43,7 @@
       {% if docker_ipv6 %}
       Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS=--ipv6"
       {% endif %}
-    dest: "/home/{{ user }}/.config/systemd/user/docker.service.d/override.conf"
+    dest: "{{ user_home }}/.config/systemd/user/docker.service.d/override.conf"
     owner: "{{ user }}"
     group: "{{ user }}"
     mode: "0600"
@@ -55,7 +53,7 @@
 
 - name: Ensure Docker config dir exists
   ansible.builtin.file:
-    path: "/home/{{ user }}/.config/docker"
+    path: "{{ user_home }}/.config/docker"
     state: directory
     owner: "{{ user }}"
     group: "{{ user }}"
@@ -64,7 +62,7 @@
 
 - name: Configure Docker daemon (daemon.json)
   ansible.builtin.copy:
-    dest: "/home/{{ user }}/.config/docker/daemon.json"
+    dest: "{{ user_home }}/.config/docker/daemon.json"
     owner: "{{ user }}"
     group: "{{ user }}"
     mode: "0644"

@@ -2,7 +2,7 @@
 namespace: astappiev
 name: common
 description: Essential Linux roles for most common tasks.
-version: 1.5.0
+version: 1.6.0
 
 readme: README.md
 

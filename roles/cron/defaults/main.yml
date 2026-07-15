@@ -33,9 +33,8 @@ cron_jobs: []
 #     weekday: "*"
 #     user: root
 #
-#   - name: Set PATH for cron
-#     env: true
-#     name: PATH
-#     job: /usr/local/bin:/usr/bin:/bin
+#   - name: Set PATH=/usr/local/bin:/usr/bin:/bin on top of crontab
+#     env_var: PATH
+#     env_value: /usr/local/bin:/usr/bin:/bin
 #     user: www-data
 #     cron_file: app_tasks

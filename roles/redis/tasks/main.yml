@@ -7,13 +7,19 @@
     name: redis-server
     state: present
 
+- name: Set redis bind
+  ansible.builtin.lineinfile:
+    path: /etc/redis/redis.conf
+    regexp: "^#?\\s*bind\\s"
+    line: "bind {{ redis_bind }}"
+  notify: Restart redis
+
 - name: Set redis password
   ansible.builtin.lineinfile:
     path: /etc/redis/redis.conf
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  with_items:
-    - { regexp: "^#?\\s?requirepass", line: "requirepass {{ redis_password }}" }
+    regexp: "^#?\\s?requirepass"
+    line: "requirepass {{ redis_password }}"
+  no_log: true
   notify: Restart redis
 
 - name: Enable and start Redis service

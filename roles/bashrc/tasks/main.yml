@@ -7,9 +7,17 @@
     group: root
     mode: "0755"
 
+- name: Check which rc files exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ bashrc_global_path }}"
+    - "{{ bashrc_global_path_zsh }}"
+  register: _bashrc_file_stats
+
 - name: Enable bashrc.d scripts
   ansible.builtin.blockinfile:
-    path: "{{ item }}"
+    path: "{{ item.item }}"
     prepend_newline: true
     append_newline: true
     create: false
@@ -23,11 +31,7 @@
         done
         unset i
       fi
-  loop:
-    - "{{ bashrc_global_path }}"
-    - "{{ bashrc_global_path_zsh }}"
-  register: _bashrc_file_edits
-  failed_when:
-    - _bashrc_file_edits.failed is defined
-    - _bashrc_file_edits.failed
-    - _bashrc_file_edits.rc != 257  # Destination does not exist
+  loop: "{{ _bashrc_file_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
