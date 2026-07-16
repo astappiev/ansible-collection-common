@@ -12,9 +12,9 @@ argument_specs:
         description: Install Node.js from the system package manager or the NodeSource repository.
       nodejs_version:
         type: str
-        default: "lts.x"
+        default: "26.x"
         description: >-
-          Version of Node.js to install via NodeSource, e.g. "22.x", "24.x".
+          Version of Node.js to install via NodeSource, e.g. "24.x", "26.x".
           Only used if nodejs_install_source is set to "nodesource".
       nodejs_corepack_enable:
         type: list

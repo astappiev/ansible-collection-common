@@ -8,7 +8,7 @@ nodejs_install_source: distro
 # Version of Node.js to install via NodeSource.
 # Can be any version available at https://nodesource.com/products/distributions, e.g., "22.x", "24.x".
 # Only used if nodejs_install_source is set to "nodesource".
-nodejs_version: "lts.x"
+nodejs_version: "26.x"
 
 # List of package managers to enable via Corepack.
 # Corepack manages package managers like npm, pnpm, and yarn.
