@@ -257,6 +257,10 @@ def get_version_installed(
     except (OSError, IOError):
         return None
     else:
+        # If the command failed (non-zero exit code) or returned empty output,
+        # the binary is likely not installed - return None to allow installation
+        if rc != 0 or not result_stdout.strip():
+            return None
         version_installed = extract_version(result_stdout.strip(), version_regex)
         if not version_installed:
             module.fail_json(
