@@ -1,0 +1,6 @@
+---
+# True when the sshd role should manage root's authorized keys.
+# False when users_list already defines authorized_keys for root.
+_sshd_manage_root_keys: >-
+  {{ users_list is not defined or
+     (users_list | selectattr('name', 'equalto', 'root') | first | default({})).authorized_keys is not defined }}
