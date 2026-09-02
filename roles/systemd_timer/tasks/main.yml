@@ -2,7 +2,7 @@
 - name: Uploading service file
   ansible.builtin.template:
     src: service.j2
-    dest: "{{ systemd_base_path }}/{{ systemd_timer_name }}.service"
+    dest: "{{ systemd_base_path | default('/etc/systemd/system') }}/{{ systemd_timer_name }}.service"
     owner: root
     group: root
     mode: '0644'
@@ -12,7 +12,7 @@
 - name: Uploading timer file
   ansible.builtin.template:
     src: timer.j2
-    dest: "{{ systemd_base_path }}/{{ systemd_timer_name }}.timer"
+    dest: "{{ systemd_base_path | default('/etc/systemd/system') }}/{{ systemd_timer_name }}.timer"
     owner: root
     group: root
     mode: '0644'

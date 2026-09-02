@@ -28,9 +28,7 @@
     mode: '0600'
     owner: root
     group: root
-    # autorestic check may attempt to reach configured backends; on a host
-    # without network access to the backend this validation will fail.
-    validate: "{{ autorestic_binary_path }} check -c %s"
+    validate: "{{ autorestic_binary_path }} info -c %s"
   when: autorestic_locations | length > 0 and autorestic_backends | length > 0
   no_log: true
 
