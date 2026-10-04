@@ -1,0 +1,40 @@
+[Unit]
+Description=Rathole {{ rathole_mode | capitalize }} Service
+After=network.target
+
+[Service]
+Type=simple
+# Run as an unprivileged throwaway user; systemd copies the root-only config
+# into a credentials directory readable only by that user.
+DynamicUser=yes
+LoadCredential=rathole.toml:{{ rathole_config_path }}
+ExecStart={{ rathole_binary_path }} -c ${CREDENTIALS_DIRECTORY}/rathole.toml
+Restart=on-failure
+RestartSec=5
+
+{% if rathole_mode == 'server' %}
+# Allow binding service ports below 1024.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+{% else %}
+CapabilityBoundingSet=
+{% endif %}
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

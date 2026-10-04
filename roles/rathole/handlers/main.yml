@@ -1,0 +1,7 @@
+---
+- name: Restart rathole
+  ansible.builtin.systemd:
+    name: "{{ rathole_service_name }}"
+    state: restarted
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"

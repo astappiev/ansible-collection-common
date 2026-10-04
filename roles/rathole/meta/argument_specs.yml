@@ -1,0 +1,86 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure rathole client or server as a systemd service
+    options:
+      rathole_mode:
+        type: str
+        default: client
+        choices:
+          - client
+          - server
+        description: Whether to run rathole as a client or a server.
+      rathole_version:
+        type: str
+        default: v0.5.0
+        description: The release tag of rathole to install (e.g. "v0.5.0"), or "latest".
+      rathole_state:
+        type: str
+        default: present
+        choices:
+          - present
+          - latest
+        description: >-
+          State of the rathole package. Use "present" to install once, or "latest" to keep updated.
+      rathole_binary_path:
+        type: str
+        default: /usr/local/bin/rathole
+        description: The path where the rathole binary will be installed.
+      rathole_config_dir:
+        type: str
+        default: /etc/rathole
+        description: The directory of the rathole configuration file.
+      rathole_config_path:
+        type: str
+        default: /etc/rathole/rathole.toml
+        description: The path of the rathole configuration file.
+      rathole_service_name:
+        type: str
+        default: rathole
+        description: The name of the systemd service.
+      rathole_remote_addr:
+        type: str
+        description: >-
+          Client only, required: the address of the rathole server to connect to
+          (e.g. "example.com:2333"). Checked in tasks/assert.yml.
+      rathole_bind_addr:
+        type: str
+        description: >-
+          Server only, required: the address the server listens on for clients
+          (e.g. "0.0.0.0:2333"). Checked in tasks/assert.yml.
+      rathole_default_token:
+        type: str
+        no_log: true
+        description: Optional token used by services that don't define their own.
+      rathole_options:
+        type: dict
+        default: {}
+        description: >-
+          Extra options rendered into the [client] or [server] section, e.g.
+          heartbeat_timeout, retry_interval (client) or heartbeat_interval (server).
+      rathole_transport_type:
+        type: str
+        default: tcp
+        choices:
+          - tcp
+          - tls
+          - noise
+          - websocket
+        description: The transport type used between client and server.
+      rathole_transport:
+        type: dict
+        default: {}
+        no_log: true
+        description: >-
+          Transport options keyed by sub-section (tcp, tls, noise, websocket), each rendered
+          into [<mode>.transport.<section>]. See
+          https://github.com/rathole-org/rathole/blob/main/docs/transport.md.
+          May contain keys and passwords.
+      rathole_services:
+        type: dict
+        default: {}
+        no_log: true
+        description: >-
+          Services to forward, keyed by name. Each value is a dict of options rendered into
+          [<mode>.services.<name>] (local_addr for clients, bind_addr for servers, token, type, ...).
+          Set "enabled: false" to render the service commented out. May contain tokens.

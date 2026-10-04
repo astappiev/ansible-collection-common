@@ -1,0 +1,73 @@
+---
+# Whether to run rathole as a 'client' or a 'server'.
+rathole_mode: client
+
+# The release tag of rathole to install (e.g. 'v0.5.0'), or 'latest'.
+rathole_version: v0.5.0
+
+# The state of rathole package. Use 'present' to install once, or 'latest' to keep updated.
+rathole_state: present
+
+# The path where rathole binary will be installed.
+rathole_binary_path: /usr/local/bin/rathole
+
+# The directory and path of the rathole configuration file.
+rathole_config_dir: /etc/rathole
+rathole_config_path: "{{ rathole_config_dir }}/rathole.toml"
+
+# The name of the systemd service.
+rathole_service_name: rathole
+
+# Client only: the address of the rathole server to connect to.
+# rathole_remote_addr: "example.com:2333"
+
+# Server only: the address the rathole server listens on for clients.
+# rathole_bind_addr: "0.0.0.0:2333"
+
+# Optional token used by services that don't define their own.
+# rathole_default_token: "default_token_if_not_specify"
+
+# Extra options rendered into the [client] or [server] section,
+# e.g. heartbeat_timeout, retry_interval (client) or heartbeat_interval (server).
+rathole_options: {}
+
+# The transport type: 'tcp', 'tls', 'noise' or 'websocket'.
+rathole_transport_type: tcp
+
+# Transport options, keyed by sub-section (tcp, tls, noise, websocket). Each value is
+# rendered into [<mode>.transport.<section>].
+# https://github.com/rathole-org/rathole/blob/main/docs/transport.md
+#
+# Noise keys: generate a keypair once with `rathole --genkey` (on any host with rathole
+# installed). It prints a private and a public key: put the private key on the server
+# (local_private_key) and the public key on every client (remote_public_key).
+#
+# Example (client):
+# rathole_transport:
+#   noise:
+#     remote_public_key: "public_key_from_genkey"
+# Example (server):
+# rathole_transport:
+#   noise:
+#     local_private_key: "private_key_from_genkey"
+rathole_transport: {}
+
+# Services to forward, keyed by name. Each value is a dict of options rendered into
+# [<mode>.services.<name>]. Set 'enabled: false' to render the service commented out.
+# Clients use 'local_addr', servers use 'bind_addr'; the token must match on both sides.
+# https://github.com/rathole-org/rathole#configuration
+# Example (client):
+# rathole_services:
+#   ssh:
+#     local_addr: "127.0.0.1:22"
+#     token: "change_this_token"
+#   http:
+#     local_addr: "127.0.0.1:80"
+#     token: "change_this_token"
+#     enabled: false
+# Example (server):
+# rathole_services:
+#   ssh:
+#     bind_addr: "0.0.0.0:5022"
+#     token: "change_this_token"
+rathole_services: {}

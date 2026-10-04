@@ -1,0 +1,11 @@
+---
+# The address variable required depends on rathole_mode, which isn't expressible in
+# meta/argument_specs.yml, so it is checked here.
+- name: Assert rathole address is defined for the selected mode
+  ansible.builtin.assert:
+    that:
+      - (rathole_remote_addr if rathole_mode == 'client' else rathole_bind_addr) is defined
+    fail_msg: >-
+      The variable '{{ 'rathole_remote_addr' if rathole_mode == 'client' else 'rathole_bind_addr' }}'
+      must be defined when rathole_mode is '{{ rathole_mode }}'.
+    quiet: true

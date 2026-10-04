@@ -15,6 +15,7 @@ Only tested on Debian-based systems. Might work on others.
 - `mariadb` - Install and configure MariaDB server
 - `nodejs` - Install Node.js and enable package managers via Corepack
 - `packages` - Install a list of system packages
+- `rathole` - Install rathole client or server as a systemd service
 - `redis` - Install and configure Redis server
 - `restic` - Install restic and autorestic for backups
 - `sshd` - Configure SSH daemon with security best practices

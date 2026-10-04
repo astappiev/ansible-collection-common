@@ -1,0 +1,51 @@
+---
+- name: Assert role variables
+  ansible.builtin.import_tasks: assert.yml
+
+- name: Install rathole binary
+  astappiev.common.install_github_release:
+    repo: rathole-org/rathole
+    tag: "{{ rathole_version }}"
+    state: "{{ rathole_state }}"
+    asset_regex: rathole-.*-linux-.*\.zip
+    version_command: "{{ rathole_binary_path }} --version"
+    move_rules:
+      - src_regex: rathole
+        dst: "{{ rathole_binary_path }}"
+        mode: '0755'
+  notify: Restart rathole
+
+- name: Create rathole configuration directory
+  ansible.builtin.file:
+    path: "{{ rathole_config_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create rathole configuration
+  ansible.builtin.template:
+    src: rathole.toml.j2
+    dest: "{{ rathole_config_path }}"
+    mode: '0600'
+    owner: root
+    group: root
+  no_log: true
+  notify: Restart rathole
+
+- name: Create rathole systemd service
+  ansible.builtin.template:
+    src: rathole.service.j2
+    dest: "/etc/systemd/system/{{ rathole_service_name }}.service"
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Restart rathole
+
+- name: Enable and start rathole service
+  ansible.builtin.systemd:
+    name: "{{ rathole_service_name }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"

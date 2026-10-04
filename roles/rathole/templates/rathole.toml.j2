@@ -1,0 +1,29 @@
+[{{ rathole_mode }}]
+{% if rathole_mode == 'client' %}
+remote_addr = {{ rathole_remote_addr | to_json }}
+{% else %}
+bind_addr = {{ rathole_bind_addr | to_json }}
+{% endif %}
+{% if rathole_default_token is defined %}
+default_token = {{ rathole_default_token | to_json }}
+{% endif %}
+{% for key, value in rathole_options.items() %}
+{{ key }} = {{ value | to_json }}
+{% endfor %}
+
+[{{ rathole_mode }}.transport]
+type = {{ rathole_transport_type | to_json }}
+{% for section, options in rathole_transport.items() %}
+[{{ rathole_mode }}.transport.{{ section }}]
+{% for key, value in options.items() %}
+{{ key }} = {{ value | to_json }}
+{% endfor %}
+{% endfor %}
+{% for name, service in rathole_services.items() %}
+{% set prefix = '' if service.enabled | default(true) else '#' %}
+
+{{ prefix }}[{{ rathole_mode }}.services.{{ name }}]
+{% for key, value in service.items() if key != 'enabled' %}
+{{ prefix }}{{ key }} = {{ value | to_json }}
+{% endfor %}
+{% endfor %}
