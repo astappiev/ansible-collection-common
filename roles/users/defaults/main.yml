@@ -7,7 +7,8 @@
 #   - name: exampleuser
 #     comment: "Example User"
 #     uid: 1001
-#     group: exampleuser
+#     group: exampleuser # created if missing
+#     gid: 1001 # optional, gid for the group; defaults to uid when creating a group named after the user
 #     groups: [sudo, www-data]
 #     shell: /bin/bash
 #     password: "$6$rounds=656000$..." # Use ansible-vault or generate with: mkpasswd --method=sha-512

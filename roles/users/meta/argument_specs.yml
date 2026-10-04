@@ -31,7 +31,13 @@ argument_specs:
           group:
             type: str
             required: false
-            description: The user's primary group.
+            description: The user's primary group. Created automatically if it does not exist.
+          gid:
+            type: int
+            required: false
+            description: >-
+              The numeric group ID for the primary group. When omitted and a missing group named
+              after the user is created, it defaults to the user's uid.
           groups:
             type: list
             elements: str
