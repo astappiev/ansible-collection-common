@@ -8,7 +8,7 @@ Type=simple
 # into a credentials directory readable only by that user.
 DynamicUser=yes
 LoadCredential=rathole.toml:{{ rathole_config_path }}
-ExecStart={{ rathole_binary_path }} -c ${CREDENTIALS_DIRECTORY}/rathole.toml
+ExecStart={{ rathole_binary_path }} --{{ rathole_mode }} ${CREDENTIALS_DIRECTORY}/rathole.toml
 Restart=on-failure
 RestartSec=5
 
