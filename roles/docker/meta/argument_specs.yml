@@ -30,6 +30,13 @@ argument_specs:
           - pasta
           - slirp4netns
         description: Rootless Docker network driver to use. Only applicable if docker_rootless is true.
+      docker_rootless_host_loopback:
+        type: bool
+        default: false
+        description: >-
+          Whether rootless containers can reach services listening on the host's loopback (127.0.0.1)
+          via the 10.0.2.2 address. Exposes all host loopback services to every container.
+          Only applicable if docker_rootless is true.
       docker_ipv6:
         type: bool
         default: true

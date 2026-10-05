@@ -17,6 +17,10 @@ docker_rootless: false
 # Rootless Docker network driver to use: pasta or slirp4netns (only applicable if docker_rootless is true).
 docker_rootless_network_driver: "pasta"
 
+# Whether rootless containers can reach services listening on the host's loopback (127.0.0.1),
+# via the 10.0.2.2 address. Note: this exposes all host loopback services to every container.
+docker_rootless_host_loopback: false
+
 # Whether to enable IPv6 networking in Docker
 docker_ipv6: true
 

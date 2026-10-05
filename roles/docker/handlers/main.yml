@@ -16,6 +16,7 @@
     daemon_reload: true
     scope: user
   loop: "{{ docker_users }}"
+  when: docker_rootless and not ansible_check_mode
 
 - name: User docker restart
   become: true

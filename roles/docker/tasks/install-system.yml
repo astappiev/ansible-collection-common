@@ -4,6 +4,7 @@
     name:
       - docker-ce
       - docker-ce-cli
+      - docker-ce-rootless-extras
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
@@ -25,3 +26,7 @@
       - docker-compose
     update_cache: "{{ _docker_repo_removed is changed }}"
     state: present
+  notify:
+    - Restart docker
+    - User daemon reload
+    - User docker restart

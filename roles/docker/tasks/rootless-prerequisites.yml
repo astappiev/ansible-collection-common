@@ -14,6 +14,7 @@
   loop:
     - docker.service
     - docker.socket
+    - containerd.service
   when: not ansible_check_mode
 
 - name: Remove root Docker socket

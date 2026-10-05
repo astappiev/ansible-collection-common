@@ -7,6 +7,7 @@
       - docker-buildx
       - docker-cli
       - docker-doc
+      - rootlesskit
       - podman-docker
       - containerd
       - runc
@@ -35,3 +36,7 @@
       - docker-compose-plugin
     update_cache: "{{ _docker_repo_result is changed }}"
     state: present
+  notify:
+    - Restart docker
+    - User daemon reload
+    - User docker restart

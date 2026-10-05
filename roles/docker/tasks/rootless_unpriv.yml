@@ -33,11 +33,17 @@
       # Ansible managed
 
       [Service]
+      ExecStart=
+      ExecStart={{ _docker_rootless_bin_dir }}/dockerd-rootless.sh
+
       {% if docker_rootless_network_driver == "pasta" %}
       Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_NET=pasta"
       Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=implicit"
       {% elif docker_rootless_network_driver == "slirp4netns" %}
       Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=slirp4netns"
+      {% endif %}
+      {% if docker_rootless_host_loopback %}
+      Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_DISABLE_HOST_LOOPBACK=false"
       {% endif %}
 
       {% if docker_ipv6 %}
@@ -47,6 +53,8 @@
     owner: "{{ user }}"
     group: "{{ user }}"
     mode: "0600"
+  vars:
+    _docker_rootless_bin_dir: "{{ '/usr/share/docker.io/contrib' if docker_install_source == 'distro' else '/usr/bin' }}"
   notify:
     - User daemon reload
     - User docker restart
