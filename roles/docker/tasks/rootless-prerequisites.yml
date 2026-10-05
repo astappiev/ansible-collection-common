@@ -59,6 +59,7 @@
     name: net.ipv4.ip_unprivileged_port_start
     value: "{{ docker_unprivileged_port_start }}"
     state: present
+    sysctl_file: /etc/sysctl.d/99-unprivileged-ports.conf
     sysctl_set: true
     reload: true
   when: docker_unprivileged_port_start is defined and docker_unprivileged_port_start > 0
