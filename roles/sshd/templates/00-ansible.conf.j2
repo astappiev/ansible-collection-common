@@ -2,5 +2,11 @@
 
 Port {{ sshd_port }}
 PubkeyAuthentication yes
-PermitRootLogin {{ sshd_permit_root_login }}
+PermitRootLogin {{ 'no' if sshd_root_login_addresses | length > 0 else sshd_permit_root_login }}
 PasswordAuthentication {{ 'yes' if sshd_password_authentication | bool else 'no' }}
+{% if sshd_root_login_addresses | length > 0 %}
+
+# Root logs in only from these addresses. The Match block ends with this file, the main sshd_config is not affected.
+Match Address {{ sshd_root_login_addresses | join(',') }}
+    PermitRootLogin {{ sshd_permit_root_login }}
+{% endif %}

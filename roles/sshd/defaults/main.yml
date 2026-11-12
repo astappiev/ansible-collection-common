@@ -10,5 +10,9 @@ sshd_remove_authorized_keys: true
 # Whether to permit root login via SSH
 sshd_permit_root_login: "{{ 'prohibit-password' if sshd_authorized_keys | length > 0 else 'yes' }}"
 
+# Addresses (or CIDR networks) root may log in from.
+# Empty allows every address. Otherwise root logins from other addresses are refused (PermitRootLogin no).
+sshd_root_login_addresses: []
+
 # Enable or disable password authentication via SSH
 sshd_password_authentication: "{{ sshd_authorized_keys | length == 0 }}"

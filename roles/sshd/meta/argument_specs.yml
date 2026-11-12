@@ -29,6 +29,13 @@ argument_specs:
         description: >-
           Whether to permit root login via SSH. Defaults to prohibit-password when
           sshd_authorized_keys is non-empty, otherwise yes (see defaults/main.yml).
+      sshd_root_login_addresses:
+        type: list
+        elements: str
+        default: []
+        description: >-
+          Addresses or CIDR networks root may log in from.
+          Empty allows every address, otherwise root logins from other addresses are refused.
       sshd_password_authentication:
         type: bool
         description: >-
