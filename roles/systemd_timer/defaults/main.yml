@@ -21,8 +21,14 @@ systemd_timer_group: root
 # Day Of the week  Year-Month-Date  Hour:Minute:Second
 # systemd_timer_on_calendar:
 
+# Extra lines for the [Service] section, e.g. sandboxing options: ["PrivateTmp=true", "ProtectSystem=strict"]
+systemd_timer_service_options: []
+
 # Timer have a default accuracy of round about one minute. You can set the accuracy with this var.
 systemd_timer_accuracy_sec: 15s
+
+# Delays the timer by a random time up to this value, to spread the load of many hosts
+# systemd_timer_randomized_delay_sec:
 
 # Takes a boolean argument. If true, the time when the service unit was last triggered is stroed on disk.
 # When the timer is activated, the service unit is triggered immediately if it would have been triggered

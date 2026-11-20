@@ -31,6 +31,12 @@ argument_specs:
         type: str
         default: root
         description: Group under which systemd_timer_command is executed.
+      systemd_timer_service_options:
+        type: list
+        elements: str
+        default: []
+        description: >-
+          Extra lines for the [Service] section, for example sandboxing options such as "PrivateTmp=true".
       systemd_timer_on_calendar:
         type: str
         required: false
@@ -41,6 +47,10 @@ argument_specs:
         default: 15s
         description: >-
           Accuracy of the timer. Timers have a default accuracy of about one minute.
+      systemd_timer_randomized_delay_sec:
+        type: str
+        required: false
+        description: Delays the timer by a random time up to this value, to spread the load of many hosts.
       systemd_timer_persistent:
         type: bool
         default: false

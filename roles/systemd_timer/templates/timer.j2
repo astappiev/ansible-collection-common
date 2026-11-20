@@ -24,6 +24,9 @@ OnCalendar={{ systemd_timer_on_calendar }}
 Persistent={{ systemd_timer_persistent | lower }}
 {% endif %}
 AccuracySec={{ systemd_timer_accuracy_sec }}
+{% if systemd_timer_randomized_delay_sec is defined %}
+RandomizedDelaySec={{ systemd_timer_randomized_delay_sec }}
+{% endif %}
 
 [Install]
 WantedBy=timers.target

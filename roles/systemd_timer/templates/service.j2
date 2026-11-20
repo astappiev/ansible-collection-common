@@ -21,3 +21,6 @@ Group={{ systemd_timer_group }}
 {% if systemd_timer_workingdir is defined %}
 WorkingDirectory={{ systemd_timer_workingdir }}
 {% endif %}
+{% for option in systemd_timer_service_options %}
+{{ option }}
+{% endfor %}
